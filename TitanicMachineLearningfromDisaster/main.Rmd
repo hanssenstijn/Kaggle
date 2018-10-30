@@ -16,7 +16,7 @@ rm(list=ls())
 Loading the required packages for specific functions.
 ```{r}
 if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
-pacman::p_load(GLDEX,dplyr,mice,VIM)
+pacman::p_load(GLDEX,dplyr,mice,VIM,randomForest)
 ```
 
 ### Set working directory
@@ -51,8 +51,11 @@ train$Pclass <- as.factor(train$Pclass)
 train$Sex <- as.factor(train$Sex)
 train$Embarked <- as.factor(train$Embarked)
 str(train)
+test$Pclass <- as.factor(test$Pclass)
+test$Sex <- as.factor(test$Sex)
+test$Embarked <- as.factor(test$Embarked)
+str(test)
 ```
-
 
 ### Investigate specific columns 
 ```{r}
@@ -85,6 +88,27 @@ Assigning the most often occuring character to the two missing values
 ```{r}
 train$Embarked[c(62,830)] <- 'S'
 table(train$Embarked)
+```
+
+### Survived column as factor
+
+```{r}
+train$Survived <- as.factor(train$Survived)
+```
+
+### Prediction model
+
+```{r}
+equation <- "Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
+formula <- as.formula(equation)
+model <- randomForest(formula = formula, data = train, ntree = 500, mtry = 3, nodesize = 0.01 * nrow(train))
+
+```
+
+### Test model on test data
+```{r}
+survived <- predict(model, newdata = test)
+survived
 ```
 
 
