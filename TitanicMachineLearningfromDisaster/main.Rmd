@@ -44,6 +44,15 @@ head(train)
 tail(train)
 ```
 
+### Inspect test data
+Firstly we look at the data structure, to see which variables we have. 
+```{r}
+str(test)
+summary(test)
+head(test)
+tail(test)
+```
+
 ### Setting the columns to factors
 All these columns have different levels
 ```{r}
@@ -87,6 +96,8 @@ which.na(train$Age)
 Assigning the most often occuring character to the two missing values 
 ```{r}
 train$Embarked[c(62,830)] <- 'S'
+table(train$Embarked)
+train$Embarked <- droplevels(train$Embarked)
 table(train$Embarked)
 ```
 
