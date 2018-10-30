@@ -44,6 +44,16 @@ head(train)
 tail(train)
 ```
 
+### Setting the columns to factors
+All these columns have different levels
+```{r}
+train$Pclass <- as.factor(train$Pclass)
+train$Sex <- as.factor(train$Sex)
+train$Embarked <- as.factor(train$Embarked)
+str(train)
+```
+
+
 ### Investigate specific columns 
 ```{r}
 # check at which places there are missing values for age
@@ -76,4 +86,5 @@ Assigning the most often occuring character to the two missing values
 train$Embarked[c(62,830)] <- 'S'
 table(train$Embarked)
 ```
+
 
