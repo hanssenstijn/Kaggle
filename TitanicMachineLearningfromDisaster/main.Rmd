@@ -11,3 +11,9 @@ First step is to make sure that the working space is empty.
 # clear all variables
 rm(list=ls()) 
 ```
+
+### Load packages
+Setting the size memory for the project and loading the required packages for specific functions.
+```{r}
+
+```
