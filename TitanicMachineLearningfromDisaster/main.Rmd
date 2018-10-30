@@ -15,7 +15,8 @@ rm(list=ls())
 ### Load packages
 Loading the required packages for specific functions.
 ```{r}
-
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(GLDEX)
 ```
 
 ### Set working directory
@@ -30,8 +31,16 @@ list.files()
 ### Import data
 The training and test set will be imported into R
 ```{r}
-train <- read.csv("train.csv")
-test <- read.csv("test.csv")
+train <- read.csv("train.csv",stringsAsFactors = F,header = T)
+test <- read.csv("test.csv", stringsAsFactors =  F,header = T)
+```
 
+### Inspect training data
+Firstly we look at the data structure, to see which variables we have. 
+```{r}
+str(train)
+summary(train)
+head(train)
+tail(train)
 ```
 
