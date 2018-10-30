@@ -137,10 +137,16 @@ rm(list=ls()) </code></pre>
 </div>
 <div id="load-packages" class="section level3">
 <h3>Load packages</h3>
-<p>Setting the size memory for the project and loading the required packages for specific functions.</p>
+<p>Loading the required packages for specific functions.</p>
 </div>
-<div id="import-data" class="section level3">
-<h3>Import data</h3>
+<div id="set-working-directory" class="section level3">
+<h3>Set working directory</h3>
+<p>Choose the path were the data-sets are stored</p>
+<pre class="r"><code>DATA.DIR &lt;- &quot;~/GitHub/Kaggle/TitanicMachineLearningfromDisaster&quot;
+setwd(DATA.DIR)
+# See which files are in WD
+list.files() </code></pre>
+<pre><code>## [1] &quot;main.html&quot; &quot;main.Rmd&quot;  &quot;README.md&quot; &quot;test.csv&quot;  &quot;train.csv&quot;</code></pre>
 </div>
 
 

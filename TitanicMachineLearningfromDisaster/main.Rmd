@@ -18,7 +18,6 @@ Loading the required packages for specific functions.
 
 ```
 
-
 ### Set working directory
 Choose the path were the data-sets are stored
 ```{r}
@@ -26,5 +25,13 @@ DATA.DIR <- "~/GitHub/Kaggle/TitanicMachineLearningfromDisaster"
 setwd(DATA.DIR)
 # See which files are in WD
 list.files() 
+```
+
+### Import data
+The training and test set will be imported into R
+```{r}
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+
 ```
 
