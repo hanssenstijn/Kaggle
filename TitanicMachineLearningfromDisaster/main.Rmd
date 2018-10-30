@@ -78,10 +78,10 @@ Fare <- filter(train, Fare == 0.00)
 # every person who paided nothing is a man who embarked at S (southampton) it is mentioned that this is the place were the crew boarded
 Fare
 # cabin column misses alot information
-train$Cabin
+head(train$Cabin, n = 20)
 ```
 
-### Missing values age
+### Missing values age training
 ```{r}
 trainage <- train[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
 tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)
@@ -92,7 +92,7 @@ train$Age <- completedData$Age
 which.na(train$Age)
 ```
 
-### Missing values embarked
+### Missing values embarked training
 Assigning the most often occuring character to the two missing values 
 ```{r}
 train$Embarked[c(62,830)] <- 'S'
@@ -101,7 +101,28 @@ train$Embarked <- droplevels(train$Embarked)
 table(train$Embarked)
 ```
 
-### Survived column as factor
+### Missing value fate test set
+
+```{r}
+which.na(test$Fare)
+test$Fare[153] <- mean(test$Fare,na.rm = T)
+test$Fare[153]
+```
+
+
+### Missing values age test set
+```{r}
+testing <- test[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
+tempData <- mice(testing,m=5,maxit=50,meth='pmm',seed=500)
+summary(tempData)
+tempData$imp$Age
+completedData <- complete(tempData,1)
+test$Age <- completedData$Age
+which.na(test$Age)
+```
+
+
+### Survived column training as factor
 
 ```{r}
 train$Survived <- as.factor(train$Survived)
