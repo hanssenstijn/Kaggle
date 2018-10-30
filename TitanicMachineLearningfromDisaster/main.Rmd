@@ -60,7 +60,6 @@ train$Cabin
 ```
 
 ### Missing values age
-
 ```{r}
 trainage <- train[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
 tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)
@@ -69,5 +68,12 @@ tempData$imp$Age
 completedData <- complete(tempData,1)
 train$Age <- completedData$Age
 which.na(train$Age)
+```
+
+### Missing values embarked
+Assigning the most often occuring character to the two missing values 
+```{r}
+train$Embarked[c(62,830)] <- 'S'
+table(train$Embarked)
 ```
 
