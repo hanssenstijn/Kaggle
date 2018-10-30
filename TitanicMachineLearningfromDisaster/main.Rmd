@@ -15,8 +15,8 @@ rm(list=ls())
 ### Load packages
 Loading the required packages for specific functions.
 ```{r}
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load(GLDEX)
+if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
+pacman::p_load(GLDEX,dplyr,mice,VIM)
 ```
 
 ### Set working directory
@@ -29,7 +29,7 @@ list.files()
 ```
 
 ### Import data
-The training and test set will be imported into R
+The training and test set will be imported into R.
 ```{r}
 train <- read.csv("train.csv",stringsAsFactors = F,header = T)
 test <- read.csv("test.csv", stringsAsFactors =  F,header = T)
@@ -42,5 +42,32 @@ str(train)
 summary(train)
 head(train)
 tail(train)
+```
+
+### Investigate specific columns 
+```{r}
+# check at which places there are missing values for age
+which.na(train$Age)
+# at what place did people entered the ship
+table(train$Embarked)
+which(train$Embarked == '')
+# filter based on paid nothing for the titanic
+Fare <- filter(train, Fare == 0.00)
+# every person who paided nothing is a man who embarked at S (southampton) it is mentioned that this is the place were the crew boarded
+Fare
+# cabin column misses alot information
+train$Cabin
+```
+
+### Missing values age
+
+```{r}
+trainage <- train[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
+tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)
+summary(tempData)
+tempData$imp$Age
+completedData <- complete(tempData,1)
+train$Age <- completedData$Age
+which.na(train$Age)
 ```
 
