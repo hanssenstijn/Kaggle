@@ -112,7 +112,7 @@ test$Fare[153]
 
 ### Missing values age test set
 ```{r}
-testing <- test[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
+testing <- test[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
 tempData <- mice(testing,m=5,maxit=50,meth='pmm',seed=500)
 summary(tempData)
 tempData$imp$Age
@@ -120,7 +120,6 @@ completedData <- complete(tempData,1)
 test$Age <- completedData$Age
 which.na(test$Age)
 ```
-
 
 ### Survived column training as factor
 
