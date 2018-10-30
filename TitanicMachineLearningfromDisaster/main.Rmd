@@ -111,4 +111,15 @@ survived <- predict(model, newdata = test)
 survived
 ```
 
+### Kaggle submition document
+
+```{r}
+PassengerId <- test$PassengerId
+output <- as.data.frame(PassengerId)
+output$survived <- survived
+tail(output)
+
+write.csv(output, file="kaggle_submission.csv", row.names = F)
+```
+
 
