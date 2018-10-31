@@ -48,7 +48,7 @@ test$Embarked <- as.factor(test$Embarked)
 ```
 
 ### Missing values age training
-
+A linear model is used to predict the missing values for the column age. Set up the model then use predict for prediction. Then put the predicted values into the dataset
 ```{r}
 trainage <- train[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
 equation <- "Age ~ ."
@@ -71,15 +71,13 @@ table(train$Embarked)
 ```
 
 ### Missing value fate test set
-
+For the reason that only one value is missing we used the avarage for this one.
 ```{r}
 which.na(test$Fare)
 test$Fare[153] <- mean(test$Fare,na.rm = T)
 ```
 
-
 ### Missing values age test set
-
 ```{r}
 testing <- test[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
 equation <- "Age ~ ."
@@ -93,13 +91,11 @@ test[is.na(test$Age), "Age"] <- prediction
 ```
 
 ### Survived column training as factor
-
 ```{r}
 train$Survived <- as.factor(train$Survived)
 ```
 
 ### Prediction model
-
 ```{r}
 equation <- "Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
 formula <- as.formula(equation)
@@ -113,7 +109,6 @@ survived
 ```
 
 ### Kaggle submition document
-
 ```{r}
 PassengerId <- test$PassengerId
 output <- as.data.frame(PassengerId)
