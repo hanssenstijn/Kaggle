@@ -1,0 +1,126 @@
+---
+title: Titanic Machine learning from disaster
+author: Stijn Hanssen
+date: 30 October 2018
+output: html_document
+---
+
+### Clear working space
+First step is to make sure that the working space is empty.
+```{r}
+# clear all variables
+rm(list=ls()) 
+```
+
+### Load packages
+Loading the required packages for specific functions.
+```{r}
+if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
+pacman::p_load(GLDEX,dplyr,mice,VIM,randomForest)
+```
+
+### Set working directory
+Choose the path were the data-sets are stored
+```{r}
+DATA.DIR <- "~/GitHub/Kaggle/TitanicMachineLearningfromDisaster"
+setwd(DATA.DIR)
+# See which files are in WD
+list.files() 
+```
+
+### Import data
+The training and test set will be imported into R.
+```{r}
+train <- read.csv("train.csv",stringsAsFactors = F,header = T)
+test <- read.csv("test.csv", stringsAsFactors =  F,header = T)
+```
+
+
+### Setting the columns to factors
+All these columns have different levels
+```{r}
+train$Pclass <- as.factor(train$Pclass)
+train$Sex <- as.factor(train$Sex)
+train$Embarked <- as.factor(train$Embarked)
+test$Pclass <- as.factor(test$Pclass)
+test$Sex <- as.factor(test$Sex)
+test$Embarked <- as.factor(test$Embarked)
+```
+
+### Missing values age training
+
+```{r}
+trainage <- train[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
+equation <- "Age ~ ."
+formula <- as.formula(equation)
+model <- lm(formula = formula,data = trainage)
+trainageNA <- which.na(trainage)
+trainageNA <- trainage[trainageNA,]
+prediction <- predict(model,trainageNA)
+prediction
+train[is.na(train$Age), "Age"] <- prediction
+```
+
+### Missing values embarked training
+Assigning the most often occuring character to the two missing values, it is common pratice to replace the missing categorical variables with the mode of the observed onces (however it is questionable).
+```{r}
+train$Embarked[c(62,830)] <- 'S'
+table(train$Embarked)
+train$Embarked <- droplevels(train$Embarked)
+table(train$Embarked)
+```
+
+### Missing value fate test set
+
+```{r}
+which.na(test$Fare)
+test$Fare[153] <- mean(test$Fare,na.rm = T)
+```
+
+
+### Missing values age test set
+
+```{r}
+testing <- test[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
+equation <- "Age ~ ."
+formula <- as.formula(equation)
+model <- lm(formula = formula,data = testing)
+testingNA <- which.na(testing)
+testingNA <- testing[testingNA,]
+prediction <- predict(model,testingNA)
+prediction
+test[is.na(test$Age), "Age"] <- prediction
+```
+
+### Survived column training as factor
+
+```{r}
+train$Survived <- as.factor(train$Survived)
+```
+
+### Prediction model
+
+```{r}
+equation <- "Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
+formula <- as.formula(equation)
+model <- randomForest(formula = formula, data = train)
+```
+
+### Test model on test data
+```{r}
+survived <- predict(model, newdata = test)
+survived
+```
+
+### Kaggle submition document
+
+```{r}
+PassengerId <- test$PassengerId
+output <- as.data.frame(PassengerId)
+output$survived <- survived
+tail(output)
+
+write.csv(output, file="kaggle_submission.csv", row.names = F)
+```
+
+
