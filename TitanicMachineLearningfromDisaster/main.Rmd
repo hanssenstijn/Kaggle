@@ -82,9 +82,14 @@ head(train$Cabin, n = 20)
 ```
 
 ### Missing values age training
+The data seems to be missing completely at random (MCAR). Usually a safe maximum threshold for missing data is 5 percent of the total for large datasets. Quick fix could be mean-subsitution but this results in decrease of the variance, while the mean will be unchanged.
+Mice package imputing missing values with plausible data values (drawn from distribution)
 ```{r}
+# test if more than 5 percent is missing of the age column
+pMiss <- function(x){sum(is.na(x))/length(x)*100}
+apply(train,2,pMiss)
 trainage <- train[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
-tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)
+tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500,printFlag = F)
 summary(tempData)
 head(tempData$imp$Age)
 completedData <- complete(tempData,1)
@@ -93,7 +98,7 @@ which.na(train$Age)
 ```
 
 ### Missing values embarked training
-Assigning the most often occuring character to the two missing values 
+Assigning the most often occuring character to the two missing values, it is common pratice to replace the missing categorical variables with the mode of the observed onces (however it is questionable).
 ```{r}
 train$Embarked[c(62,830)] <- 'S'
 table(train$Embarked)
@@ -111,9 +116,11 @@ test$Fare[153]
 
 
 ### Missing values age test set
+
 ```{r}
+apply(test,2,pMiss)
 testing <- test[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
-tempData <- mice(testing,m=5,maxit=50,meth='pmm',seed=500)
+tempData <- mice(testing,m=5,maxit=50,meth='pmm',seed=500,printFlag = F)
 summary(tempData)
 tempData$imp$Age
 completedData <- complete(tempData,1)
