@@ -138,6 +138,10 @@ rm(list=ls()) </code></pre>
 <div id="load-packages" class="section level3">
 <h3>Load packages</h3>
 <p>Loading the required packages for specific functions.</p>
+<pre class="r"><code>if (!require(&quot;pacman&quot;)) suppressPackageStartupMessages(install.packages(&quot;pacman&quot;))</code></pre>
+<pre><code>## Loading required package: pacman</code></pre>
+<pre><code>## Warning: package 'pacman' was built under R version 3.5.1</code></pre>
+<pre class="r"><code>pacman::p_load(GLDEX,dplyr,mice,VIM,randomForest)</code></pre>
 </div>
 <div id="set-working-directory" class="section level3">
 <h3>Set working directory</h3>
@@ -146,7 +150,1184 @@ rm(list=ls()) </code></pre>
 setwd(DATA.DIR)
 # See which files are in WD
 list.files() </code></pre>
-<pre><code>## [1] &quot;main.html&quot; &quot;main.Rmd&quot;  &quot;README.md&quot; &quot;test.csv&quot;  &quot;train.csv&quot;</code></pre>
+<pre><code>## [1] &quot;kaggle_submission.csv&quot; &quot;main.html&quot;             &quot;main.Rmd&quot;             
+## [4] &quot;README.md&quot;             &quot;test.csv&quot;              &quot;train.csv&quot;</code></pre>
+</div>
+<div id="import-data" class="section level3">
+<h3>Import data</h3>
+<p>The training and test set will be imported into R.</p>
+<pre class="r"><code>train &lt;- read.csv(&quot;train.csv&quot;,stringsAsFactors = F,header = T)
+test &lt;- read.csv(&quot;test.csv&quot;, stringsAsFactors =  F,header = T)</code></pre>
+</div>
+<div id="inspect-training-data" class="section level3">
+<h3>Inspect training data</h3>
+<p>Firstly we look at the data structure, to see which variables we have.</p>
+<pre class="r"><code>str(train)</code></pre>
+<pre><code>## 'data.frame':    891 obs. of  12 variables:
+##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
+##  $ Pclass     : int  3 1 3 1 3 3 1 3 3 2 ...
+##  $ Name       : chr  &quot;Braund, Mr. Owen Harris&quot; &quot;Cumings, Mrs. John Bradley (Florence Briggs Thayer)&quot; &quot;Heikkinen, Miss. Laina&quot; &quot;Futrelle, Mrs. Jacques Heath (Lily May Peel)&quot; ...
+##  $ Sex        : chr  &quot;male&quot; &quot;female&quot; &quot;female&quot; &quot;female&quot; ...
+##  $ Age        : num  22 38 26 35 35 NA 54 2 27 14 ...
+##  $ SibSp      : int  1 1 0 1 0 0 0 3 0 1 ...
+##  $ Parch      : int  0 0 0 0 0 0 0 1 2 0 ...
+##  $ Ticket     : chr  &quot;A/5 21171&quot; &quot;PC 17599&quot; &quot;STON/O2. 3101282&quot; &quot;113803&quot; ...
+##  $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
+##  $ Cabin      : chr  &quot;&quot; &quot;C85&quot; &quot;&quot; &quot;C123&quot; ...
+##  $ Embarked   : chr  &quot;S&quot; &quot;C&quot; &quot;S&quot; &quot;S&quot; ...</code></pre>
+<pre class="r"><code>summary(train)</code></pre>
+<pre><code>##   PassengerId       Survived          Pclass          Name          
+##  Min.   :  1.0   Min.   :0.0000   Min.   :1.000   Length:891        
+##  1st Qu.:223.5   1st Qu.:0.0000   1st Qu.:2.000   Class :character  
+##  Median :446.0   Median :0.0000   Median :3.000   Mode  :character  
+##  Mean   :446.0   Mean   :0.3838   Mean   :2.309                     
+##  3rd Qu.:668.5   3rd Qu.:1.0000   3rd Qu.:3.000                     
+##  Max.   :891.0   Max.   :1.0000   Max.   :3.000                     
+##                                                                     
+##      Sex                 Age            SibSp           Parch       
+##  Length:891         Min.   : 0.42   Min.   :0.000   Min.   :0.0000  
+##  Class :character   1st Qu.:20.12   1st Qu.:0.000   1st Qu.:0.0000  
+##  Mode  :character   Median :28.00   Median :0.000   Median :0.0000  
+##                     Mean   :29.70   Mean   :0.523   Mean   :0.3816  
+##                     3rd Qu.:38.00   3rd Qu.:1.000   3rd Qu.:0.0000  
+##                     Max.   :80.00   Max.   :8.000   Max.   :6.0000  
+##                     NA's   :177                                     
+##     Ticket               Fare           Cabin             Embarked        
+##  Length:891         Min.   :  0.00   Length:891         Length:891        
+##  Class :character   1st Qu.:  7.91   Class :character   Class :character  
+##  Mode  :character   Median : 14.45   Mode  :character   Mode  :character  
+##                     Mean   : 32.20                                        
+##                     3rd Qu.: 31.00                                        
+##                     Max.   :512.33                                        
+## </code></pre>
+<pre class="r"><code>head(train)</code></pre>
+<pre><code>##   PassengerId Survived Pclass
+## 1           1        0      3
+## 2           2        1      1
+## 3           3        1      3
+## 4           4        1      1
+## 5           5        0      3
+## 6           6        0      3
+##                                                  Name    Sex Age SibSp
+## 1                             Braund, Mr. Owen Harris   male  22     1
+## 2 Cumings, Mrs. John Bradley (Florence Briggs Thayer) female  38     1
+## 3                              Heikkinen, Miss. Laina female  26     0
+## 4        Futrelle, Mrs. Jacques Heath (Lily May Peel) female  35     1
+## 5                            Allen, Mr. William Henry   male  35     0
+## 6                                    Moran, Mr. James   male  NA     0
+##   Parch           Ticket    Fare Cabin Embarked
+## 1     0        A/5 21171  7.2500              S
+## 2     0         PC 17599 71.2833   C85        C
+## 3     0 STON/O2. 3101282  7.9250              S
+## 4     0           113803 53.1000  C123        S
+## 5     0           373450  8.0500              S
+## 6     0           330877  8.4583              Q</code></pre>
+<pre class="r"><code>tail(train)</code></pre>
+<pre><code>##     PassengerId Survived Pclass                                     Name
+## 886         886        0      3     Rice, Mrs. William (Margaret Norton)
+## 887         887        0      2                    Montvila, Rev. Juozas
+## 888         888        1      1             Graham, Miss. Margaret Edith
+## 889         889        0      3 Johnston, Miss. Catherine Helen &quot;Carrie&quot;
+## 890         890        1      1                    Behr, Mr. Karl Howell
+## 891         891        0      3                      Dooley, Mr. Patrick
+##        Sex Age SibSp Parch     Ticket   Fare Cabin Embarked
+## 886 female  39     0     5     382652 29.125              Q
+## 887   male  27     0     0     211536 13.000              S
+## 888 female  19     0     0     112053 30.000   B42        S
+## 889 female  NA     1     2 W./C. 6607 23.450              S
+## 890   male  26     0     0     111369 30.000  C148        C
+## 891   male  32     0     0     370376  7.750              Q</code></pre>
+</div>
+<div id="inspect-test-data" class="section level3">
+<h3>Inspect test data</h3>
+<p>Firstly we look at the data structure, to see which variables we have.</p>
+<pre class="r"><code>str(test)</code></pre>
+<pre><code>## 'data.frame':    418 obs. of  11 variables:
+##  $ PassengerId: int  892 893 894 895 896 897 898 899 900 901 ...
+##  $ Pclass     : int  3 3 2 3 3 3 3 2 3 3 ...
+##  $ Name       : chr  &quot;Kelly, Mr. James&quot; &quot;Wilkes, Mrs. James (Ellen Needs)&quot; &quot;Myles, Mr. Thomas Francis&quot; &quot;Wirz, Mr. Albert&quot; ...
+##  $ Sex        : chr  &quot;male&quot; &quot;female&quot; &quot;male&quot; &quot;male&quot; ...
+##  $ Age        : num  34.5 47 62 27 22 14 30 26 18 21 ...
+##  $ SibSp      : int  0 1 0 0 1 0 0 1 0 2 ...
+##  $ Parch      : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ Ticket     : chr  &quot;330911&quot; &quot;363272&quot; &quot;240276&quot; &quot;315154&quot; ...
+##  $ Fare       : num  7.83 7 9.69 8.66 12.29 ...
+##  $ Cabin      : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+##  $ Embarked   : chr  &quot;Q&quot; &quot;S&quot; &quot;Q&quot; &quot;S&quot; ...</code></pre>
+<pre class="r"><code>summary(test)</code></pre>
+<pre><code>##   PassengerId         Pclass          Name               Sex           
+##  Min.   : 892.0   Min.   :1.000   Length:418         Length:418        
+##  1st Qu.: 996.2   1st Qu.:1.000   Class :character   Class :character  
+##  Median :1100.5   Median :3.000   Mode  :character   Mode  :character  
+##  Mean   :1100.5   Mean   :2.266                                        
+##  3rd Qu.:1204.8   3rd Qu.:3.000                                        
+##  Max.   :1309.0   Max.   :3.000                                        
+##                                                                        
+##       Age            SibSp            Parch           Ticket         
+##  Min.   : 0.17   Min.   :0.0000   Min.   :0.0000   Length:418        
+##  1st Qu.:21.00   1st Qu.:0.0000   1st Qu.:0.0000   Class :character  
+##  Median :27.00   Median :0.0000   Median :0.0000   Mode  :character  
+##  Mean   :30.27   Mean   :0.4474   Mean   :0.3923                     
+##  3rd Qu.:39.00   3rd Qu.:1.0000   3rd Qu.:0.0000                     
+##  Max.   :76.00   Max.   :8.0000   Max.   :9.0000                     
+##  NA's   :86                                                          
+##       Fare            Cabin             Embarked        
+##  Min.   :  0.000   Length:418         Length:418        
+##  1st Qu.:  7.896   Class :character   Class :character  
+##  Median : 14.454   Mode  :character   Mode  :character  
+##  Mean   : 35.627                                        
+##  3rd Qu.: 31.500                                        
+##  Max.   :512.329                                        
+##  NA's   :1</code></pre>
+<pre class="r"><code>head(test)</code></pre>
+<pre><code>##   PassengerId Pclass                                         Name    Sex
+## 1         892      3                             Kelly, Mr. James   male
+## 2         893      3             Wilkes, Mrs. James (Ellen Needs) female
+## 3         894      2                    Myles, Mr. Thomas Francis   male
+## 4         895      3                             Wirz, Mr. Albert   male
+## 5         896      3 Hirvonen, Mrs. Alexander (Helga E Lindqvist) female
+## 6         897      3                   Svensson, Mr. Johan Cervin   male
+##    Age SibSp Parch  Ticket    Fare Cabin Embarked
+## 1 34.5     0     0  330911  7.8292              Q
+## 2 47.0     1     0  363272  7.0000              S
+## 3 62.0     0     0  240276  9.6875              Q
+## 4 27.0     0     0  315154  8.6625              S
+## 5 22.0     1     1 3101298 12.2875              S
+## 6 14.0     0     0    7538  9.2250              S</code></pre>
+<pre class="r"><code>tail(test)</code></pre>
+<pre><code>##     PassengerId Pclass                           Name    Sex  Age SibSp
+## 413        1304      3 Henriksson, Miss. Jenny Lovisa female 28.0     0
+## 414        1305      3             Spector, Mr. Woolf   male   NA     0
+## 415        1306      1   Oliva y Ocana, Dona. Fermina female 39.0     0
+## 416        1307      3   Saether, Mr. Simon Sivertsen   male 38.5     0
+## 417        1308      3            Ware, Mr. Frederick   male   NA     0
+## 418        1309      3       Peter, Master. Michael J   male   NA     1
+##     Parch             Ticket     Fare Cabin Embarked
+## 413     0             347086   7.7750              S
+## 414     0          A.5. 3236   8.0500              S
+## 415     0           PC 17758 108.9000  C105        C
+## 416     0 SOTON/O.Q. 3101262   7.2500              S
+## 417     0             359309   8.0500              S
+## 418     1               2668  22.3583              C</code></pre>
+</div>
+<div id="setting-the-columns-to-factors" class="section level3">
+<h3>Setting the columns to factors</h3>
+<p>All these columns have different levels</p>
+<pre class="r"><code>train$Pclass &lt;- as.factor(train$Pclass)
+train$Sex &lt;- as.factor(train$Sex)
+train$Embarked &lt;- as.factor(train$Embarked)
+str(train)</code></pre>
+<pre><code>## 'data.frame':    891 obs. of  12 variables:
+##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
+##  $ Pclass     : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
+##  $ Name       : chr  &quot;Braund, Mr. Owen Harris&quot; &quot;Cumings, Mrs. John Bradley (Florence Briggs Thayer)&quot; &quot;Heikkinen, Miss. Laina&quot; &quot;Futrelle, Mrs. Jacques Heath (Lily May Peel)&quot; ...
+##  $ Sex        : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
+##  $ Age        : num  22 38 26 35 35 NA 54 2 27 14 ...
+##  $ SibSp      : int  1 1 0 1 0 0 0 3 0 1 ...
+##  $ Parch      : int  0 0 0 0 0 0 0 1 2 0 ...
+##  $ Ticket     : chr  &quot;A/5 21171&quot; &quot;PC 17599&quot; &quot;STON/O2. 3101282&quot; &quot;113803&quot; ...
+##  $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
+##  $ Cabin      : chr  &quot;&quot; &quot;C85&quot; &quot;&quot; &quot;C123&quot; ...
+##  $ Embarked   : Factor w/ 4 levels &quot;&quot;,&quot;C&quot;,&quot;Q&quot;,&quot;S&quot;: 4 2 4 4 4 3 4 4 4 2 ...</code></pre>
+<pre class="r"><code>test$Pclass &lt;- as.factor(test$Pclass)
+test$Sex &lt;- as.factor(test$Sex)
+test$Embarked &lt;- as.factor(test$Embarked)
+str(test)</code></pre>
+<pre><code>## 'data.frame':    418 obs. of  11 variables:
+##  $ PassengerId: int  892 893 894 895 896 897 898 899 900 901 ...
+##  $ Pclass     : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 3 2 3 3 3 3 2 3 3 ...
+##  $ Name       : chr  &quot;Kelly, Mr. James&quot; &quot;Wilkes, Mrs. James (Ellen Needs)&quot; &quot;Myles, Mr. Thomas Francis&quot; &quot;Wirz, Mr. Albert&quot; ...
+##  $ Sex        : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 2 2 1 2 1 2 1 2 ...
+##  $ Age        : num  34.5 47 62 27 22 14 30 26 18 21 ...
+##  $ SibSp      : int  0 1 0 0 1 0 0 1 0 2 ...
+##  $ Parch      : int  0 0 0 0 1 0 0 1 0 0 ...
+##  $ Ticket     : chr  &quot;330911&quot; &quot;363272&quot; &quot;240276&quot; &quot;315154&quot; ...
+##  $ Fare       : num  7.83 7 9.69 8.66 12.29 ...
+##  $ Cabin      : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+##  $ Embarked   : Factor w/ 3 levels &quot;C&quot;,&quot;Q&quot;,&quot;S&quot;: 2 3 2 3 3 3 2 3 1 3 ...</code></pre>
+</div>
+<div id="investigate-specific-columns" class="section level3">
+<h3>Investigate specific columns</h3>
+<pre class="r"><code># check at which places there are missing values for age
+which.na(train$Age)</code></pre>
+<pre><code>##   [1]   6  18  20  27  29  30  32  33  37  43  46  47  48  49  56  65  66
+##  [18]  77  78  83  88  96 102 108 110 122 127 129 141 155 159 160 167 169
+##  [35] 177 181 182 186 187 197 199 202 215 224 230 236 241 242 251 257 261
+##  [52] 265 271 275 278 285 296 299 301 302 304 305 307 325 331 335 336 348
+##  [69] 352 355 359 360 365 368 369 376 385 389 410 411 412 414 416 421 426
+##  [86] 429 432 445 452 455 458 460 465 467 469 471 476 482 486 491 496 498
+## [103] 503 508 512 518 523 525 528 532 534 539 548 553 558 561 564 565 569
+## [120] 574 579 585 590 594 597 599 602 603 612 613 614 630 634 640 644 649
+## [137] 651 654 657 668 670 675 681 693 698 710 712 719 728 733 739 740 741
+## [154] 761 767 769 774 777 779 784 791 793 794 816 826 827 829 833 838 840
+## [171] 847 850 860 864 869 879 889</code></pre>
+<pre class="r"><code># at what place did people entered the ship
+table(train$Embarked)</code></pre>
+<pre><code>## 
+##       C   Q   S 
+##   2 168  77 644</code></pre>
+<pre class="r"><code>which(train$Embarked == '')</code></pre>
+<pre><code>## [1]  62 830</code></pre>
+<pre class="r"><code># filter based on paid nothing for the titanic
+Fare &lt;- filter(train, Fare == 0.00)
+# every person who paided nothing is a man who embarked at S (southampton) it is mentioned that this is the place were the crew boarded
+Fare</code></pre>
+<pre><code>##    PassengerId Survived Pclass                             Name  Sex Age
+## 1          180        0      3              Leonard, Mr. Lionel male  36
+## 2          264        0      1            Harrison, Mr. William male  40
+## 3          272        1      3     Tornquist, Mr. William Henry male  25
+## 4          278        0      2      Parkes, Mr. Francis &quot;Frank&quot; male  NA
+## 5          303        0      3  Johnson, Mr. William Cahoone Jr male  19
+## 6          414        0      2   Cunningham, Mr. Alfred Fleming male  NA
+## 7          467        0      2            Campbell, Mr. William male  NA
+## 8          482        0      2 Frost, Mr. Anthony Wood &quot;Archie&quot; male  NA
+## 9          598        0      3              Johnson, Mr. Alfred male  49
+## 10         634        0      1    Parr, Mr. William Henry Marsh male  NA
+## 11         675        0      2       Watson, Mr. Ennis Hastings male  NA
+## 12         733        0      2             Knight, Mr. Robert J male  NA
+## 13         807        0      1           Andrews, Mr. Thomas Jr male  39
+## 14         816        0      1                 Fry, Mr. Richard male  NA
+## 15         823        0      1  Reuchlin, Jonkheer. John George male  38
+##    SibSp Parch Ticket Fare Cabin Embarked
+## 1      0     0   LINE    0              S
+## 2      0     0 112059    0   B94        S
+## 3      0     0   LINE    0              S
+## 4      0     0 239853    0              S
+## 5      0     0   LINE    0              S
+## 6      0     0 239853    0              S
+## 7      0     0 239853    0              S
+## 8      0     0 239854    0              S
+## 9      0     0   LINE    0              S
+## 10     0     0 112052    0              S
+## 11     0     0 239856    0              S
+## 12     0     0 239855    0              S
+## 13     0     0 112050    0   A36        S
+## 14     0     0 112058    0  B102        S
+## 15     0     0  19972    0              S</code></pre>
+<pre class="r"><code># cabin column misses alot information
+head(train$Cabin, n = 20)</code></pre>
+<pre><code>##  [1] &quot;&quot;     &quot;C85&quot;  &quot;&quot;     &quot;C123&quot; &quot;&quot;     &quot;&quot;     &quot;E46&quot;  &quot;&quot;     &quot;&quot;     &quot;&quot;    
+## [11] &quot;G6&quot;   &quot;C103&quot; &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;</code></pre>
+</div>
+<div id="missing-values-age-training" class="section level3">
+<h3>Missing values age training</h3>
+<pre class="r"><code>trainage &lt;- train[,c(&quot;Age&quot;,&quot;Survived&quot;,&quot;Pclass&quot;,&quot;Sex&quot;,&quot;SibSp&quot;,&quot;Parch&quot;,&quot;Fare&quot;)]
+tempData &lt;- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)</code></pre>
+<pre><code>## 
+##  iter imp variable
+##   1   1  Age
+##   1   2  Age
+##   1   3  Age
+##   1   4  Age
+##   1   5  Age
+##   2   1  Age
+##   2   2  Age
+##   2   3  Age
+##   2   4  Age
+##   2   5  Age
+##   3   1  Age
+##   3   2  Age
+##   3   3  Age
+##   3   4  Age
+##   3   5  Age
+##   4   1  Age
+##   4   2  Age
+##   4   3  Age
+##   4   4  Age
+##   4   5  Age
+##   5   1  Age
+##   5   2  Age
+##   5   3  Age
+##   5   4  Age
+##   5   5  Age
+##   6   1  Age
+##   6   2  Age
+##   6   3  Age
+##   6   4  Age
+##   6   5  Age
+##   7   1  Age
+##   7   2  Age
+##   7   3  Age
+##   7   4  Age
+##   7   5  Age
+##   8   1  Age
+##   8   2  Age
+##   8   3  Age
+##   8   4  Age
+##   8   5  Age
+##   9   1  Age
+##   9   2  Age
+##   9   3  Age
+##   9   4  Age
+##   9   5  Age
+##   10   1  Age
+##   10   2  Age
+##   10   3  Age
+##   10   4  Age
+##   10   5  Age
+##   11   1  Age
+##   11   2  Age
+##   11   3  Age
+##   11   4  Age
+##   11   5  Age
+##   12   1  Age
+##   12   2  Age
+##   12   3  Age
+##   12   4  Age
+##   12   5  Age
+##   13   1  Age
+##   13   2  Age
+##   13   3  Age
+##   13   4  Age
+##   13   5  Age
+##   14   1  Age
+##   14   2  Age
+##   14   3  Age
+##   14   4  Age
+##   14   5  Age
+##   15   1  Age
+##   15   2  Age
+##   15   3  Age
+##   15   4  Age
+##   15   5  Age
+##   16   1  Age
+##   16   2  Age
+##   16   3  Age
+##   16   4  Age
+##   16   5  Age
+##   17   1  Age
+##   17   2  Age
+##   17   3  Age
+##   17   4  Age
+##   17   5  Age
+##   18   1  Age
+##   18   2  Age
+##   18   3  Age
+##   18   4  Age
+##   18   5  Age
+##   19   1  Age
+##   19   2  Age
+##   19   3  Age
+##   19   4  Age
+##   19   5  Age
+##   20   1  Age
+##   20   2  Age
+##   20   3  Age
+##   20   4  Age
+##   20   5  Age
+##   21   1  Age
+##   21   2  Age
+##   21   3  Age
+##   21   4  Age
+##   21   5  Age
+##   22   1  Age
+##   22   2  Age
+##   22   3  Age
+##   22   4  Age
+##   22   5  Age
+##   23   1  Age
+##   23   2  Age
+##   23   3  Age
+##   23   4  Age
+##   23   5  Age
+##   24   1  Age
+##   24   2  Age
+##   24   3  Age
+##   24   4  Age
+##   24   5  Age
+##   25   1  Age
+##   25   2  Age
+##   25   3  Age
+##   25   4  Age
+##   25   5  Age
+##   26   1  Age
+##   26   2  Age
+##   26   3  Age
+##   26   4  Age
+##   26   5  Age
+##   27   1  Age
+##   27   2  Age
+##   27   3  Age
+##   27   4  Age
+##   27   5  Age
+##   28   1  Age
+##   28   2  Age
+##   28   3  Age
+##   28   4  Age
+##   28   5  Age
+##   29   1  Age
+##   29   2  Age
+##   29   3  Age
+##   29   4  Age
+##   29   5  Age
+##   30   1  Age
+##   30   2  Age
+##   30   3  Age
+##   30   4  Age
+##   30   5  Age
+##   31   1  Age
+##   31   2  Age
+##   31   3  Age
+##   31   4  Age
+##   31   5  Age
+##   32   1  Age
+##   32   2  Age
+##   32   3  Age
+##   32   4  Age
+##   32   5  Age
+##   33   1  Age
+##   33   2  Age
+##   33   3  Age
+##   33   4  Age
+##   33   5  Age
+##   34   1  Age
+##   34   2  Age
+##   34   3  Age
+##   34   4  Age
+##   34   5  Age
+##   35   1  Age
+##   35   2  Age
+##   35   3  Age
+##   35   4  Age
+##   35   5  Age
+##   36   1  Age
+##   36   2  Age
+##   36   3  Age
+##   36   4  Age
+##   36   5  Age
+##   37   1  Age
+##   37   2  Age
+##   37   3  Age
+##   37   4  Age
+##   37   5  Age
+##   38   1  Age
+##   38   2  Age
+##   38   3  Age
+##   38   4  Age
+##   38   5  Age
+##   39   1  Age
+##   39   2  Age
+##   39   3  Age
+##   39   4  Age
+##   39   5  Age
+##   40   1  Age
+##   40   2  Age
+##   40   3  Age
+##   40   4  Age
+##   40   5  Age
+##   41   1  Age
+##   41   2  Age
+##   41   3  Age
+##   41   4  Age
+##   41   5  Age
+##   42   1  Age
+##   42   2  Age
+##   42   3  Age
+##   42   4  Age
+##   42   5  Age
+##   43   1  Age
+##   43   2  Age
+##   43   3  Age
+##   43   4  Age
+##   43   5  Age
+##   44   1  Age
+##   44   2  Age
+##   44   3  Age
+##   44   4  Age
+##   44   5  Age
+##   45   1  Age
+##   45   2  Age
+##   45   3  Age
+##   45   4  Age
+##   45   5  Age
+##   46   1  Age
+##   46   2  Age
+##   46   3  Age
+##   46   4  Age
+##   46   5  Age
+##   47   1  Age
+##   47   2  Age
+##   47   3  Age
+##   47   4  Age
+##   47   5  Age
+##   48   1  Age
+##   48   2  Age
+##   48   3  Age
+##   48   4  Age
+##   48   5  Age
+##   49   1  Age
+##   49   2  Age
+##   49   3  Age
+##   49   4  Age
+##   49   5  Age
+##   50   1  Age
+##   50   2  Age
+##   50   3  Age
+##   50   4  Age
+##   50   5  Age</code></pre>
+<pre class="r"><code>summary(tempData)</code></pre>
+<pre><code>## Class: mids
+## Number of multiple imputations:  5 
+## Imputation methods:
+##      Age Survived   Pclass      Sex    SibSp    Parch     Fare 
+##    &quot;pmm&quot;       &quot;&quot;       &quot;&quot;       &quot;&quot;       &quot;&quot;       &quot;&quot;       &quot;&quot; 
+## PredictorMatrix:
+##          Age Survived Pclass Sex SibSp Parch Fare
+## Age        0        1      1   1     1     1    1
+## Survived   1        0      1   1     1     1    1
+## Pclass     1        1      0   1     1     1    1
+## Sex        1        1      1   0     1     1    1
+## SibSp      1        1      1   1     0     1    1
+## Parch      1        1      1   1     1     0    1</code></pre>
+<pre class="r"><code>tempData$imp$Age</code></pre>
+<pre><code>##         1    2     3  4     5
+## 6   39.00 55.0 44.00 60 23.00
+## 18   8.00 28.0 35.00 29 24.00
+## 20   6.00 23.0 27.00  5 40.00
+## 27  11.00 19.0 19.00 22 28.00
+## 29  32.00  9.0  2.00 30  0.42
+## 30  28.00 35.0 62.00 37 50.00
+## 32  36.00 36.5 18.00 47 31.00
+## 33  32.00 23.0 54.00 33 48.00
+## 37   9.00 23.0 18.00 24 36.00
+## 43  19.00 35.0 19.00 22 23.00
+## 46  28.50 44.0 28.00 22 32.00
+## 47  26.00 33.0 36.00 19 36.00
+## 48  39.00  9.0 18.00 30 40.00
+## 49  24.00  9.0 43.00 45  9.00
+## 56  27.00 49.0 45.00 38 18.00
+## 65  50.00 39.0 39.00 71 33.00
+## 66   2.00  4.0 31.00  4  0.75
+## 77  19.00 19.0 44.00 22 34.00
+## 78  19.00 44.0 62.00 17 36.00
+## 83   0.42  9.0 26.00  5 40.00
+## 88  28.50 35.0 62.00 17 50.00
+## 96  19.00 55.0 44.00 37 23.00
+## 102 19.00 35.0 62.00 60 50.00
+## 108 21.00 24.0 33.00 24 24.00
+## 110  3.00 10.0 31.00  4  3.00
+## 122 28.00 44.0 19.00 22 45.00
+## 127 28.50 35.0 44.00 22 30.00
+## 129  4.00  9.0  8.00 20 30.00
+## 141 32.50 25.0 26.00 13 26.00
+## 155 36.00 35.0 62.00 17 32.50
+## 159 21.00 44.0 19.00 37 23.00
+## 160 17.00  5.0  3.00  9  3.00
+## 167 56.00 32.0 28.00 38 40.00
+## 169 50.00 33.0 40.00 47 39.00
+## 177 36.00 10.0 38.00  1 10.00
+## 181 11.00  9.0  9.00 14 14.00
+## 182 57.00 18.0 47.00 38 56.00
+## 186 33.00 40.0 64.00 37 50.00
+## 187 31.00  2.0  4.00  4  4.00
+## 197 21.00 19.0 19.00 17 36.00
+## 199 32.00 23.0 18.00 33  0.42
+## 202 14.00  5.0  3.00 14  5.00
+## 215 20.00 16.0 33.00 19 40.00
+## 224 28.00 55.0 62.00 22 28.00
+## 230 43.00  9.0  0.75 32 25.00
+## 236 26.00 39.0 41.00 36 40.00
+## 241  8.00 18.0 26.00 38 18.00
+## 242  1.00  2.0 31.00 21 20.00
+## 251 19.00 35.0 19.00 22 32.50
+## 257 27.00 28.0 42.00 30 34.00
+## 261 28.50 35.0 44.00 17 45.00
+## 265  0.92  2.0 40.50 14 40.00
+## 271 40.00 50.0 33.00 37 50.00
+## 275 18.00  9.0 18.00 25  4.00
+## 278 22.00 23.0 63.00 17 22.00
+## 285 39.00 40.0 38.00 31 33.00
+## 296 39.00 38.0 50.00 71 38.00
+## 299 22.00 50.0 29.00 58 58.00
+## 301 18.00 24.0 18.00  5  0.42
+## 302  4.00  4.0 38.00  5 33.00
+## 304 28.00 11.0 10.00 27 29.00
+## 305 21.00 35.0 19.00 22 45.00
+## 307 44.00 19.0 24.00 56 26.00
+## 325  3.00  1.0 17.00  9 11.00
+## 331  0.75  1.0  0.75  3  0.75
+## 335 39.00 39.0 35.00 63 37.00
+## 336 21.00 55.0 19.00 17 50.00
+## 348 31.00  9.0 35.00 21 31.00
+## 352 33.00 40.0 33.00 71 33.00
+## 355 21.00 19.0 19.00 37 40.00
+## 359 39.00 24.0 27.00  5  4.00
+## 360  0.42 43.0 27.00  5 24.00
+## 365 18.00 14.0 14.00 33 16.00
+## 368  6.00 24.0  2.00  5 48.00
+## 369 39.00 24.0 18.00 25  0.42
+## 376 31.00 15.0 24.00 17 16.00
+## 385 21.00 55.0 19.00 22 23.00
+## 389 11.00 35.0 19.00 37 28.00
+## 410 23.00  4.0  5.00 26 36.00
+## 411 28.00 19.0 44.00 60 42.00
+## 412 21.00 35.0 62.00 60 28.00
+## 414 40.00 23.0 51.00 17 22.00
+## 416 26.00  2.0 41.00 45 36.00
+## 421 28.00 19.0 19.00 37 50.00
+## 426 21.00 19.0 62.00 22 40.00
+## 429 11.00 19.0 28.00 37 23.00
+## 432  4.00  9.0  1.00 21 31.00
+## 445  9.00  9.0 33.00 43 24.00
+## 452 26.00 45.0 14.00 19 33.00
+## 455 11.00 35.0 28.00 60 23.00
+## 458 38.00 24.0 57.00 32 57.00
+## 460 19.00 44.0 19.00 60 45.00
+## 465 11.00 44.0 62.00 22 32.50
+## 467 22.00 41.0 63.00 58 22.00
+## 469 28.50 19.0 28.00 17 42.00
+## 471 36.00 19.0 28.00 22 28.00
+## 476 38.00 33.0 56.00 37 50.00
+## 482 44.00 36.0 51.00  4 56.00
+## 486 24.00 10.0  5.00 37 36.00
+## 491 22.00 45.0 33.00 19 36.00
+## 496 18.00 28.0 19.00 19 40.00
+## 498 39.00 62.0 19.00 17 44.00
+## 503 29.00 45.0 13.00 36 45.00
+## 508 62.00 52.0 28.00 24 35.00
+## 512 19.00 44.0 19.00 22 50.00
+## 518 55.00 13.0 34.00 20 62.00
+## 523 11.00 19.0 19.00 22 32.50
+## 525 19.00 44.0 19.00 24 28.00
+## 528 50.00 31.0 22.00 58 42.00
+## 532 11.00 35.0 19.00 24 42.00
+## 534 32.00 24.0 24.00 31 23.00
+## 539  2.00 42.0 31.00 19 55.00
+## 548  8.00 50.0 35.00 23 19.00
+## 553 28.50 19.0 19.00 22 45.00
+## 558 70.00 58.0 38.00 22 42.00
+## 561 21.00 35.0 19.00 37 50.00
+## 564 19.00 35.0 28.00 22 50.00
+## 565 26.00 39.0 41.00 14 40.00
+## 569 11.00 44.0 19.00 60 28.00
+## 574 32.00 23.0 26.00 33  0.42
+## 579  7.00 34.0 22.00 47 34.00
+## 585 39.00 28.0 19.00 37 40.00
+## 590 28.50 35.0 28.00 22 45.00
+## 594 29.00 34.0 20.00 41 44.00
+## 597 50.00 55.0 25.00 40 43.00
+## 599 28.50 44.0 62.00 22 30.00
+## 602 19.00 35.0 44.00 17 50.00
+## 603 38.00 40.0 50.00 37 39.00
+## 612 21.00 35.0 62.00 37 32.50
+## 613 35.00  1.0 31.00  4  4.00
+## 614 28.00 35.0 62.00 37 45.00
+## 630 28.50 35.0 62.00 22 45.00
+## 634 39.00 40.0 40.00 36 39.00
+## 640 39.00 33.0 16.00  8 28.00
+## 644 12.00 15.0  6.00  9 20.00
+## 649 11.00 35.0 44.00 22 28.00
+## 651 28.00 35.0 19.00 17 32.00
+## 654 32.00  9.0 26.00 33  4.00
+## 657 28.50 35.0 44.00 17 24.00
+## 668 19.00 35.0 19.00 37 34.00
+## 670 17.00 38.0 58.00 19 29.00
+## 675 22.00 41.0 49.00 57 22.00
+## 681 32.50 45.0 18.00 45 45.00
+## 693 24.00 14.0 40.00 19 31.00
+## 698 39.00 24.0  2.00  5  4.00
+## 710  8.00  4.0 20.00  2  0.75
+## 712 33.00 40.0 40.00 28 50.00
+## 719 25.00 19.0 34.00 49 35.00
+## 728 39.00 24.0 54.00 25 24.00
+## 733  4.00 36.0 63.00 57 22.00
+## 739 21.00 35.0 62.00 17 23.00
+## 740 28.50 44.0 62.00 17 50.00
+## 741 22.00 24.0 45.00 24 36.00
+## 761 25.00 42.0 31.00 49 40.00
+## 767 50.00 50.0 45.00 37 39.00
+## 769 32.00 31.0  4.00 33 16.00
+## 774 11.00 19.0 19.00 24 28.00
+## 777 11.00 55.0 28.00 37 36.00
+## 779 11.00 19.0 44.00 60 23.00
+## 784 47.00 27.0 24.00 45 22.00
+## 791 28.50 35.0 19.00 22 45.00
+## 793  3.00  9.0 11.00  3 17.00
+## 794 39.00 39.0 33.00 37 40.00
+## 816 50.00 39.0 39.00 71 38.00
+## 826 19.00 35.0 62.00 22 32.00
+## 827 50.00 33.0 25.00 36 50.00
+## 829  9.00  9.0  5.00 43 25.00
+## 833 11.00 55.0 62.00 22 32.00
+## 838 28.00 55.0 19.00 17 34.00
+## 840 33.00 52.0 45.00 38 40.00
+## 847  3.00  1.0  3.00 14 17.00
+## 850 35.00 51.0 47.00 39 54.00
+## 860 19.00 55.0 28.00 24 28.00
+## 864 14.00  1.0  9.00 11 14.00
+## 869 28.00 35.0 19.00 22 55.00
+## 879 28.50 19.0 62.00 22 28.00
+## 889 19.00 15.0 28.00  9  1.00</code></pre>
+<pre class="r"><code>completedData &lt;- complete(tempData,1)
+train$Age &lt;- completedData$Age
+which.na(train$Age)</code></pre>
+<pre><code>## integer(0)</code></pre>
+</div>
+<div id="missing-values-embarked-training" class="section level3">
+<h3>Missing values embarked training</h3>
+<p>Assigning the most often occuring character to the two missing values</p>
+<pre class="r"><code>train$Embarked[c(62,830)] &lt;- 'S'
+table(train$Embarked)</code></pre>
+<pre><code>## 
+##       C   Q   S 
+##   0 168  77 646</code></pre>
+<pre class="r"><code>train$Embarked &lt;- droplevels(train$Embarked)
+table(train$Embarked)</code></pre>
+<pre><code>## 
+##   C   Q   S 
+## 168  77 646</code></pre>
+</div>
+<div id="missing-value-fate-test-set" class="section level3">
+<h3>Missing value fate test set</h3>
+<pre class="r"><code>which.na(test$Fare)</code></pre>
+<pre><code>## [1] 153</code></pre>
+<pre class="r"><code>test$Fare[153] &lt;- mean(test$Fare,na.rm = T)
+test$Fare[153]</code></pre>
+<pre><code>## [1] 35.62719</code></pre>
+</div>
+<div id="missing-values-age-test-set" class="section level3">
+<h3>Missing values age test set</h3>
+<pre class="r"><code>testing &lt;- test[,c(&quot;Age&quot;,&quot;Pclass&quot;,&quot;Sex&quot;,&quot;SibSp&quot;,&quot;Parch&quot;,&quot;Fare&quot;)]
+tempData &lt;- mice(testing,m=5,maxit=50,meth='pmm',seed=500)</code></pre>
+<pre><code>## 
+##  iter imp variable
+##   1   1  Age
+##   1   2  Age
+##   1   3  Age
+##   1   4  Age
+##   1   5  Age
+##   2   1  Age
+##   2   2  Age
+##   2   3  Age
+##   2   4  Age
+##   2   5  Age
+##   3   1  Age
+##   3   2  Age
+##   3   3  Age
+##   3   4  Age
+##   3   5  Age
+##   4   1  Age
+##   4   2  Age
+##   4   3  Age
+##   4   4  Age
+##   4   5  Age
+##   5   1  Age
+##   5   2  Age
+##   5   3  Age
+##   5   4  Age
+##   5   5  Age
+##   6   1  Age
+##   6   2  Age
+##   6   3  Age
+##   6   4  Age
+##   6   5  Age
+##   7   1  Age
+##   7   2  Age
+##   7   3  Age
+##   7   4  Age
+##   7   5  Age
+##   8   1  Age
+##   8   2  Age
+##   8   3  Age
+##   8   4  Age
+##   8   5  Age
+##   9   1  Age
+##   9   2  Age
+##   9   3  Age
+##   9   4  Age
+##   9   5  Age
+##   10   1  Age
+##   10   2  Age
+##   10   3  Age
+##   10   4  Age
+##   10   5  Age
+##   11   1  Age
+##   11   2  Age
+##   11   3  Age
+##   11   4  Age
+##   11   5  Age
+##   12   1  Age
+##   12   2  Age
+##   12   3  Age
+##   12   4  Age
+##   12   5  Age
+##   13   1  Age
+##   13   2  Age
+##   13   3  Age
+##   13   4  Age
+##   13   5  Age
+##   14   1  Age
+##   14   2  Age
+##   14   3  Age
+##   14   4  Age
+##   14   5  Age
+##   15   1  Age
+##   15   2  Age
+##   15   3  Age
+##   15   4  Age
+##   15   5  Age
+##   16   1  Age
+##   16   2  Age
+##   16   3  Age
+##   16   4  Age
+##   16   5  Age
+##   17   1  Age
+##   17   2  Age
+##   17   3  Age
+##   17   4  Age
+##   17   5  Age
+##   18   1  Age
+##   18   2  Age
+##   18   3  Age
+##   18   4  Age
+##   18   5  Age
+##   19   1  Age
+##   19   2  Age
+##   19   3  Age
+##   19   4  Age
+##   19   5  Age
+##   20   1  Age
+##   20   2  Age
+##   20   3  Age
+##   20   4  Age
+##   20   5  Age
+##   21   1  Age
+##   21   2  Age
+##   21   3  Age
+##   21   4  Age
+##   21   5  Age
+##   22   1  Age
+##   22   2  Age
+##   22   3  Age
+##   22   4  Age
+##   22   5  Age
+##   23   1  Age
+##   23   2  Age
+##   23   3  Age
+##   23   4  Age
+##   23   5  Age
+##   24   1  Age
+##   24   2  Age
+##   24   3  Age
+##   24   4  Age
+##   24   5  Age
+##   25   1  Age
+##   25   2  Age
+##   25   3  Age
+##   25   4  Age
+##   25   5  Age
+##   26   1  Age
+##   26   2  Age
+##   26   3  Age
+##   26   4  Age
+##   26   5  Age
+##   27   1  Age
+##   27   2  Age
+##   27   3  Age
+##   27   4  Age
+##   27   5  Age
+##   28   1  Age
+##   28   2  Age
+##   28   3  Age
+##   28   4  Age
+##   28   5  Age
+##   29   1  Age
+##   29   2  Age
+##   29   3  Age
+##   29   4  Age
+##   29   5  Age
+##   30   1  Age
+##   30   2  Age
+##   30   3  Age
+##   30   4  Age
+##   30   5  Age
+##   31   1  Age
+##   31   2  Age
+##   31   3  Age
+##   31   4  Age
+##   31   5  Age
+##   32   1  Age
+##   32   2  Age
+##   32   3  Age
+##   32   4  Age
+##   32   5  Age
+##   33   1  Age
+##   33   2  Age
+##   33   3  Age
+##   33   4  Age
+##   33   5  Age
+##   34   1  Age
+##   34   2  Age
+##   34   3  Age
+##   34   4  Age
+##   34   5  Age
+##   35   1  Age
+##   35   2  Age
+##   35   3  Age
+##   35   4  Age
+##   35   5  Age
+##   36   1  Age
+##   36   2  Age
+##   36   3  Age
+##   36   4  Age
+##   36   5  Age
+##   37   1  Age
+##   37   2  Age
+##   37   3  Age
+##   37   4  Age
+##   37   5  Age
+##   38   1  Age
+##   38   2  Age
+##   38   3  Age
+##   38   4  Age
+##   38   5  Age
+##   39   1  Age
+##   39   2  Age
+##   39   3  Age
+##   39   4  Age
+##   39   5  Age
+##   40   1  Age
+##   40   2  Age
+##   40   3  Age
+##   40   4  Age
+##   40   5  Age
+##   41   1  Age
+##   41   2  Age
+##   41   3  Age
+##   41   4  Age
+##   41   5  Age
+##   42   1  Age
+##   42   2  Age
+##   42   3  Age
+##   42   4  Age
+##   42   5  Age
+##   43   1  Age
+##   43   2  Age
+##   43   3  Age
+##   43   4  Age
+##   43   5  Age
+##   44   1  Age
+##   44   2  Age
+##   44   3  Age
+##   44   4  Age
+##   44   5  Age
+##   45   1  Age
+##   45   2  Age
+##   45   3  Age
+##   45   4  Age
+##   45   5  Age
+##   46   1  Age
+##   46   2  Age
+##   46   3  Age
+##   46   4  Age
+##   46   5  Age
+##   47   1  Age
+##   47   2  Age
+##   47   3  Age
+##   47   4  Age
+##   47   5  Age
+##   48   1  Age
+##   48   2  Age
+##   48   3  Age
+##   48   4  Age
+##   48   5  Age
+##   49   1  Age
+##   49   2  Age
+##   49   3  Age
+##   49   4  Age
+##   49   5  Age
+##   50   1  Age
+##   50   2  Age
+##   50   3  Age
+##   50   4  Age
+##   50   5  Age</code></pre>
+<pre class="r"><code>summary(tempData)</code></pre>
+<pre><code>## Class: mids
+## Number of multiple imputations:  5 
+## Imputation methods:
+##    Age Pclass    Sex  SibSp  Parch   Fare 
+##  &quot;pmm&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot;     &quot;&quot; 
+## PredictorMatrix:
+##        Age Pclass Sex SibSp Parch Fare
+## Age      0      1   1     1     1    1
+## Pclass   1      0   1     1     1    1
+## Sex      1      1   0     1     1    1
+## SibSp    1      1   1     0     1    1
+## Parch    1      1   1     1     0    1
+## Fare     1      1   1     1     1    0</code></pre>
+<pre class="r"><code>tempData$imp$Age</code></pre>
+<pre><code>##         1     2     3     4    5
+## 11  30.00 60.00 21.00 23.00 18.0
+## 23  54.00 50.00 43.00 48.00 43.0
+## 30  45.00 23.00 30.00 30.00 17.0
+## 34   6.00 23.00 16.00 33.00 40.0
+## 37  21.00 28.00  0.83  7.00 29.0
+## 40  26.00 63.00 45.00  0.92 17.0
+## 42  46.00 30.00 64.00 36.00 35.0
+## 48   8.00 45.00 27.00 26.50 13.0
+## 55  28.00 24.00 14.00 28.00 28.0
+## 59   0.83 27.00 22.00 21.00  6.0
+## 66  31.00 63.00 17.00 29.00  1.0
+## 77  24.00 20.00 23.00 23.00 22.0
+## 84  36.00 60.00  0.92 23.00 22.0
+## 85  17.00 63.00 28.00 14.00 40.0
+## 86  13.00 22.00 23.00 23.00 45.0
+## 89  17.00 28.00 20.00  0.75 40.0
+## 92  24.00 45.00 26.50  0.92 22.0
+## 94  36.00 29.00 26.50  0.92 18.0
+## 103 30.00 29.00 21.00 23.00 13.0
+## 108 30.00 29.00  0.92 22.50 18.0
+## 109 29.00 60.00  0.92 12.00 13.0
+## 112 17.00 32.00 12.00  0.75 40.0
+## 117 24.00 30.00 27.00 22.00 36.5
+## 122 23.00  0.83 30.00 22.00 23.0
+## 125 36.00 29.00 26.50 20.00 13.0
+## 128 10.00 11.50 47.00 29.00 10.0
+## 133 40.00  2.00 31.00  3.00 38.0
+## 134 50.00  9.00 18.00 21.00 22.0
+## 147 30.00 50.00 48.00 30.00 50.0
+## 149 25.00 30.00 23.00 57.00 50.0
+## 152 36.00 60.00 21.00 27.00 36.5
+## 161 21.00 60.50  0.83  6.00 40.0
+## 164 36.00 20.00 23.00 23.00 50.0
+## 169 45.00 60.00 43.00 41.00 43.0
+## 171 36.00 20.00 23.00 23.00 22.0
+## 174 30.00 60.00 25.00 23.00 36.5
+## 184  8.00 45.00 21.00 23.00 50.0
+## 189 14.50 13.00 13.00 14.50 10.0
+## 192 49.00 46.00 37.00 30.00 39.0
+## 200 21.00 28.00  0.83 17.00 22.0
+## 201  7.00 24.00 39.00 11.50 40.0
+## 206 49.00 25.00 76.00 30.00 39.0
+## 212 36.00 20.00 26.50 18.50 18.0
+## 217  0.75 60.50 39.00 17.00 29.0
+## 220 36.00 29.00 22.00  0.92 22.0
+## 226 16.00 20.00 30.00 36.00  5.0
+## 228 17.00 32.00 20.00  6.00 29.0
+## 234 24.00 60.00 23.00 18.50 13.0
+## 244 24.00 29.00 23.00 20.00 13.0
+## 245 17.00 60.50 26.00 17.00 36.0
+## 250  0.17 13.00  0.75 26.00  5.0
+## 256  8.00 20.00 27.00 18.50 18.0
+## 257 24.00 60.00  0.92 27.00 50.0
+## 266 36.00 29.00 21.00 23.00 36.5
+## 267 55.00 37.00 45.00 27.00 36.0
+## 268  8.00 45.00 23.00 23.00 50.0
+## 269 21.00 28.00  0.83 11.50  6.0
+## 272 24.00 60.00  0.92 22.00 13.0
+## 274 16.00 22.00 30.00 18.00 40.0
+## 275 24.00 29.00 23.00 23.00 50.0
+## 283  0.75 24.00  9.00  7.00 40.0
+## 287 24.00 30.00  0.92  0.92 36.5
+## 289 36.00 30.00 23.00 12.00 36.5
+## 290 24.00 20.00  0.92 27.00 22.0
+## 291 55.00 33.00 22.00 36.00 50.0
+## 293 36.00 29.00 25.00 21.00 18.0
+## 298 19.00 18.00 36.00 45.00 17.0
+## 302 14.00 19.00 18.00 14.00 25.0
+## 305 17.00 18.00 20.00 17.00  6.0
+## 313 24.00 45.00 27.00  0.92 18.0
+## 333 36.00 30.00  0.92  0.92 18.0
+## 340 30.00 29.00  0.92 12.00 36.5
+## 343 10.00 17.00 38.00 10.00 10.0
+## 345  7.00 40.50 17.00 17.00 17.0
+## 358 30.00 45.00 21.00 12.00 50.0
+## 359 24.00 29.00 23.00 18.50 13.0
+## 366  5.00 22.00  5.00 13.00 10.0
+## 367  9.00  0.92 23.00 23.00 38.0
+## 381 30.00 45.00 27.00 27.00 22.0
+## 383  6.00 36.00 12.00 17.00 40.0
+## 385 18.00 18.00 14.00 28.00 20.0
+## 409 11.50 28.00  9.00 17.00 22.0
+## 411 17.00 60.50 12.00  0.75 40.0
+## 414  8.00 29.00 18.50 12.00 22.0
+## 417  8.00 29.00 27.00 22.00 13.0
+## 418 22.00 60.50  0.75  6.00 30.0</code></pre>
+<pre class="r"><code>completedData &lt;- complete(tempData,1)
+test$Age &lt;- completedData$Age
+which.na(test$Age)</code></pre>
+<pre><code>## integer(0)</code></pre>
+</div>
+<div id="survived-column-training-as-factor" class="section level3">
+<h3>Survived column training as factor</h3>
+<pre class="r"><code>train$Survived &lt;- as.factor(train$Survived)</code></pre>
+</div>
+<div id="prediction-model" class="section level3">
+<h3>Prediction model</h3>
+<pre class="r"><code>equation &lt;- &quot;Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked&quot;
+formula &lt;- as.formula(equation)
+model &lt;- randomForest(formula = formula, data = train, ntree = 500, mtry = 3, nodesize = 0.01 * nrow(train))</code></pre>
+</div>
+<div id="test-model-on-test-data" class="section level3">
+<h3>Test model on test data</h3>
+<pre class="r"><code>survived &lt;- predict(model, newdata = test)
+survived</code></pre>
+<pre><code>##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18 
+##   0   0   0   0   0   0   0   0   1   0   0   0   1   0   1   1   0   0 
+##  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36 
+##   0   1   0   1   1   0   1   0   1   0   0   0   0   0   1   1   1   0 
+##  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54 
+##   0   0   0   1   0   0   0   1   1   0   0   1   1   1   1   0   1   1 
+##  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72 
+##   0   0   0   0   1   1   0   0   0   1   1   1   1   0   0   1   1   0 
+##  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
+##   0   1   1   0   0   1   0   1   1   0   0   0   0   0   1   0   1   1 
+##  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108 
+##   0   0   1   0   0   0   1   0   0   0   1   0   0   0   0   0   0   0 
+## 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 
+##   0   0   0   1   1   1   1   0   0   1   0   1   1   0   1   0   0   1 
+## 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 
+##   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0 
+## 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 
+##   0   0   0   0   1   0   1   0   0   1   0   0   1   0   0   1   1   1 
+## 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 
+##   1   0   0   0   0   0   1   0   0   0   0   0   0   1   1   0   1   1 
+## 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 
+##   0   0   1   1   1   0   1   0   0   0   0   0   0   0   1   0   1   1 
+## 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 
+##   0   0   1   1   0   1   0   0   1   0   1   0   0   0   0   1   1   0 
+## 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 
+##   1   0   1   0   1   0   1   0   1   1   0   1   0   0   0   1   0   0 
+## 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 
+##   1   0   0   0   1   1   1   1   0   0   0   0   1   0   1   1   1   0 
+## 253 254 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 
+##   1   0   0   1   0   0   1   0   0   0   1   1   0   0   0   1   0   0 
+## 271 272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287 288 
+##   0   0   1   1   0   1   0   0   0   0   0   1   1   0   1   0   0   0 
+## 289 290 291 292 293 294 295 296 297 298 299 300 301 302 303 304 305 306 
+##   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   1   1 
+## 307 308 309 310 311 312 313 314 315 316 317 318 319 320 321 322 323 324 
+##   1   1   0   0   0   0   0   1   1   1   0   0   0   0   0   0   0   1 
+## 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339 340 341 342 
+##   1   0   1   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0 
+## 343 344 345 346 347 348 349 350 351 352 353 354 355 356 357 358 359 360 
+##   0   1   1   1   0   1   0   1   1   0   0   0   1   0   1   0   0   1 
+## 361 362 363 364 365 366 367 368 369 370 371 372 373 374 375 376 377 378 
+##   0   1   1   0   1   0   1   0   1   0   0   1   0   0   1   1   0   0 
+## 379 380 381 382 383 384 385 386 387 388 389 390 391 392 393 394 395 396 
+##   0   0   0   0   1   0   0   1   0   0   0   0   0   1   0   0   0   1 
+## 397 398 399 400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 
+##   0   1   0   0   1   0   1   1   0   0   0   0   1   1   1   1   0   1 
+## 415 416 417 418 
+##   1   0   1   0 
+## Levels: 0 1</code></pre>
+</div>
+<div id="kaggle-submition-document" class="section level3">
+<h3>Kaggle submition document</h3>
+<pre class="r"><code>PassengerId &lt;- test$PassengerId
+output &lt;- as.data.frame(PassengerId)
+output$survived &lt;- survived
+tail(output)</code></pre>
+<pre><code>##     PassengerId survived
+## 413        1304        0
+## 414        1305        1
+## 415        1306        1
+## 416        1307        0
+## 417        1308        1
+## 418        1309        0</code></pre>
+<pre class="r"><code>write.csv(output, file=&quot;kaggle_submission.csv&quot;, row.names = F)</code></pre>
 </div>
 
 
