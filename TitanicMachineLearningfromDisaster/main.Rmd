@@ -1,7 +1,7 @@
 ---
-title: "Titanic Machine learning from disaster"
-author: "Stijn Hanssen"
-date: "30 October 2018"
+title: Titanic Machine learning from disaster
+author: Stijn Hanssen
+date: 30 October 2018
 output: html_document
 ---
 
@@ -66,7 +66,7 @@ test$Embarked <- as.factor(test$Embarked)
 str(test)
 ```
 
-### Investigate specific columns 
+### Investigate specific columns training set
 ```{r}
 # check at which places there are missing values for age
 which.na(train$Age)
@@ -83,10 +83,10 @@ head(train$Cabin, n = 20)
 
 ### Missing values age training
 ```{r}
-trainage <- train[,c("Age","Survived","Pclass","Sex","SibSp","Parch","Fare")]
+trainage <- train[,c("Age","Pclass","Sex","SibSp","Parch","Fare")]
 tempData <- mice(trainage,m=5,maxit=50,meth='pmm',seed=500)
 summary(tempData)
-tempData$imp$Age
+head(tempData$imp$Age)
 completedData <- complete(tempData,1)
 train$Age <- completedData$Age
 which.na(train$Age)
@@ -133,7 +133,6 @@ train$Survived <- as.factor(train$Survived)
 equation <- "Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
 formula <- as.formula(equation)
 model <- randomForest(formula = formula, data = train, ntree = 500, mtry = 3, nodesize = 0.01 * nrow(train))
-
 ```
 
 ### Test model on test data
