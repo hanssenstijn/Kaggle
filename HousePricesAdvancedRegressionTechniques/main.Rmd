@@ -16,7 +16,7 @@ rm(list=ls())
 Loading the required packages for specific functions. If the packaged aren't present, they will be automatically be downloaded.
 ```{r}
 if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
-pacman::p_load("stringr","GLDEX","RSEIS","DescTools")
+pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret")
 ```
 
 ### Set working directory
@@ -32,7 +32,6 @@ list.files()
 ```{r}
 train <- read.csv("train.csv",stringsAsFactors = F,header = T)
 test <- read.csv("test.csv", stringsAsFactors =  F,header = T)
-typeof(train)
 ```
 
 ### Explanatory
@@ -47,16 +46,16 @@ head(test)
 ```{r}
 SalePrice = train$SalePrice
 train$SalePrice = NULL
-dim(train)
-combined = rbind(train,test)
+combi = rbind(train,test)
 ```
 
 ```{r}
-sort(colSums(is.na(combined)),decreasing = T)
+sort(colSums(is.na(combi)),decreasing = T)
 ```
 
 ## Handeling Na's
 ```{r}
+fill_missing <- function(combined){
 combined[["PoolQC"]][is.na(combined[["PoolQC"]])] <- "None"
 combined[["MiscFeature"]][is.na(combined[["MiscFeature"]])] <- "None"
 combined[["Alley"]][is.na(combined[["Alley"]])] <- "None"
@@ -91,10 +90,13 @@ combined[["Exterior2nd"]][is.na(combined[["Exterior2nd"]])] <- "Other"
 combined[["Electrical"]][is.na(combined[["Electrical"]])] <- Mode(combined$Electrical,na.rm = T)
 combined[["KitchenQual"]][is.na(combined[["KitchenQual"]])] <- Mode(combined$KitchenQual,na.rm = T)
 combined[["SaleType"]][is.na(combined[["SaleType"]])] <- "Oth"
+  return(combined)
+}
 ```
 
 ## Handeling type of variable
 ```{r}
+clean <- function(combined){
 combined[["MSSubClass"]] <- factor(combined[["MSSubClass"]])
 combined[["MoSold"]] <- factor(combined[["MoSold"]])
 combined[["GarageYrBlt"]] <- factor(combined[["GarageYrBlt"]])
@@ -112,10 +114,13 @@ combined[["ExterQual"]] <- as.numeric(factor(combined[["ExterQual"]], levels=c("
   combined[["GarageQual"]] <- as.numeric(factor(combined[["GarageQual"]], levels=c("None","Po", "Fa", "TA", "Gd", "Ex")))
   combined[["GarageCond"]] <- as.numeric(factor(combined[["GarageCond"]], levels=c("None","Po", "Fa", "TA", "Gd", "Ex")))
   combined[["PoolQC"]] <- as.numeric(factor(combined[["PoolQC"]], levels=c("None", "Fa", "TA", "Gd", "Ex")))
+   return(combined)
+}
 ```
 
 ## Feature Engineering
 ```{r}
+featureEng <- function(combined){
   combined[["OverallGrade"]] <- combined[["OverallQual"]] * combined[["OverallCond"]]
   combined[["GarageGrade"]] <- combined[["GarageQual"]] * combined[["GarageCond"]]
   combined[["ExterGrade"]] <- combined[["ExterQual"]] * combined[["ExterCond"]]
@@ -127,6 +132,16 @@ combined[["ExterQual"]] <- as.numeric(factor(combined[["ExterQual"]], levels=c("
   combined[["TotalBath"]] <- combined[["BsmtFullBath"]] + (0.5 * combined[["BsmtHalfBath"]]) + combined[["FullBath"]] + (0.5 * combined[["HalfBath"]])
   combined[["TotalSF"]] <- combined[["TotalBsmtSF"]] + combined[["X1stFlrSF"]] + combined[["X2ndFlrSF"]]
   combined[["TotalPorchSF"]] <- combined[["OpenPorchSF"]] + combined[["EnclosedPorch"]] + combined[["X3SsnPorch"]] + combined[["ScreenPorch"]]
+    return(combined) 
+}
+```
+
+```{r}
+combi <- fill_missing(combi)
+combi <- clean(combi)
+combi <- featureEng(combi)
+dmy <- dummyVars(" ~ .", data = combi)
+combi2 <- data.frame(predict(dmy, newdata = combi))
 ```
 
 ## Visualization
@@ -139,13 +154,38 @@ hist(train$SalePrice)
 
 ## Correlations
 ```{r}
-training <-combined[1:1460,]
+training <-combi2[1:1460,]
 training$SalePrice = log(SalePrice + 1)
-training <- as.data.frame(training)
+typeof(training)
 correlations <- cor(training)
-testing <- combined[1461:2919,]
+correlations <- as.data.frame(correlations)
+names <- row.names(correlations)
+priceCorrelation <- correlations$SalePrice
+correlations <- cbind(names, priceCorrelation)
+correlations <- correlations[order(-priceCorrelation),]
+correlations[1:11, 1:2]
+```
 
-head(training)
+## Check for outliers in the highly correlated variables
+```{r}
+plot(training$OverallQual,training$SalePrice)
+plot(training$TotalSF,training$SalePrice)
+plot(training$GrLivArea,training$SalePrice)
+plot(training$GarageCars,training$SalePrice)
+plot(training$ExterQual,training$SalePrice)
+plot(training$TotalBath,training$SalePrice)
+plot(training$KitchenQual,training$SalePrice)
+plot(training$GarageScore,training$SalePrice)
+plot(training$GarageArea,training$SalePrice)
+plot(training$BsmtQual,training$SalePrice)
+```
+
+## outlier removal
+4 houses that have a living area of more than 4000 square feet. Two houses with largest living areas dont fit the general curve fof the plot.
+```{r}
+training[which(training$GrLivArea > 4000), c("GrLivArea", "SalePrice")]
+training <- training[-c(524,1299),]
+
 ```
 
 
