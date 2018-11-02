@@ -17,7 +17,7 @@ Loading the required packages for specific functions. If the packaged aren't pre
 ggplot for data visualization, stringr for extracting string paterns, matrix for matrix transformations, glmnet for rigde lass and elastinet, xgboost for gbm, metrics for rmse, caret for one hot encoding, e1071 for skewness, corrplot for correlation plot.
 ```{r}
 if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
-pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","ggplot2","Matrix","glmnet","xgboost","randomForest","Metrics","dplyr","scales","e1071","corrplot","GGally","psych")
+pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","ggplot2","Matrix","glmnet","xgboost","randomForest","Metrics","dplyr","scales","e1071","corrplot","GGally","psych","WVPlots")
 ```
 
 ### Set working directory
@@ -699,4 +699,51 @@ for (col in bin.cols) {
 df.categoric <- df.categoric[,!names(df.categoric) %in% bin.cols]
 ```
 
+## Combine data
+```{r}
+df <- cbind(df.numeric, df.categoric)
+```
+
+## Distribution housing price
+```{r}
+y.true <- train$SalePrice[which(!1:1460 %in% idx.outliers)]
+
+qplot(y.true, geom='density') +# +(train, aes(x=SalePrice)) +
+  geom_histogram(aes(y=..density..), color='white', 
+                 fill='lightblue', alpha=.5, bins = 60) +
+  geom_line(aes(y=..density..), color='cornflowerblue', lwd = 1, stat = 'density') + 
+  stat_function(fun = dnorm, colour = 'indianred', lwd = 1, args = 
+                  list(mean(train$SalePrice), sd(train$SalePrice))) +
+  scale_x_continuous(breaks = seq(0,800000,100000), labels = dollar) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal() +
+  annotate('text', label = paste('skewness =', signif(skewness(train$SalePrice),4)),
+           x=500000,y=7.5e-06)
+```
+```{r}
+qqnorm(train$SalePrice)
+qqline(train$SalePrice)
+```
+We can see from the histogram and the quantile-quantile plot that the distribution of sale prices is right-skewed and does not follow a normal distribution. Lets make a log-transformation and see how our data looks
+```{r}
+y_train <- log(y.true+1)
+
+qplot(y_train, geom = 'density') +
+  geom_histogram(aes(y=..density..), color = 'white', fill = 'lightblue', alpha = .5, bins = 60) +
+  scale_x_continuous(breaks = seq(0,800000,100000), labels = comma) +
+  geom_line(aes(y=..density..), color='dodgerblue4', lwd = 1, stat = 'density') + 
+  stat_function(fun = dnorm, colour = 'indianred', lwd = 1, args = 
+                  list(mean(y_train), sd(y_train))) +
+  #scale_x_continuous(breaks = seq(0,800000,100000), labels = dollar) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal() +
+  annotate('text', label = paste('skewness =', signif(skewness(y_train),4)),
+           x=13,y=1) +
+  labs(x = 'log(SalePrice + 1)') 
+```
+
+```{r}
+qqnorm(y_train)
+qqline(y_train)
+```
 
