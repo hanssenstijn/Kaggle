@@ -747,3 +747,17 @@ qqnorm(y_train)
 qqline(y_train)
 ```
 
+## delete variables
+We've manipulated a lot of variables and added many features, 345 to be exact, in our dataset and their could potentially be some variables that won't give our data any value when we're modeling.
+he package caret offers a function nearZeroVar, which checks the frequency of the most common value over the second most frequent value, which would be closer to 1 for well-behaved predictors and very large for highly-unbalanced features. It also checks the number of unique values divided by the n number of samples which will approach zero as the level of detail in the feature increases. We can remove all of the near-zero-variance variables from out dataframe.
+```{r}
+nzv.data <- nearZeroVar(df, saveMetrics = TRUE)
+
+# take any of the near-zero-variance perdictors
+drop.cols <- rownames(nzv.data)[nzv.data$nzv == TRUE]
+
+df <- df[,!names(df) %in% drop.cols]
+```
+
+## XGBoost
+XGBoost fits shallow regression trees to our data and then additional trees to the residuals, we'll repeat this process for 30000 rounds so that our model has learned from the data as much as possible without overfitting. XGBoost is a Gradient Boosted Method (GBM), which is an ensemble learning method that uses a very large number of decision trees, which are typically weak learners and combines them into one final prediction.
