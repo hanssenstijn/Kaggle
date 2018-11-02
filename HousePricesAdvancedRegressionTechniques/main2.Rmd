@@ -17,7 +17,7 @@ Loading the required packages for specific functions. If the packaged aren't pre
 ggplot for data visualization, stringr for extracting string paterns, matrix for matrix transformations, glmnet for rigde lass and elastinet, xgboost for gbm, metrics for rmse, caret for one hot encoding, e1071 for skewness, corrplot for correlation plot.
 ```{r}
 if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
-pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","ggplot2","Matrix","glmnet","xgboost","randomForest","Metrics","dplyr","scales","e1071","corrplot","GGally")
+pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","ggplot2","Matrix","glmnet","xgboost","randomForest","Metrics","dplyr","scales","e1071","corrplot","GGally","psych")
 ```
 
 ### Set working directory
@@ -626,3 +626,77 @@ dim(df.numeric)
 ```
 
 ## Preprocessing
+If we want to use any type of linear regression model an important assumption we need to check is for normality in any of the dependant variables. We can use a Kolmogorov-Smirnof test or compute the skewness/kurtosis in each column to verify normality. or any features that are not normally distributed we can make a non-linear transformation like a log-transformation such that f(x)=log(x+1). We will also scale all of the numeric data by standardizing the data (opposed to normalizing) as we know our data has potential outliers we don't want to bound each column.
+```{r}
+# linear models assume normality from dependant variables 
+# transform any skewed data into normal
+skewed <- apply(df.numeric, 2, skewness)
+skewed <- skewed[(skewed > 0.8) | (skewed < -0.8)]
+
+kurtosis <- apply(df.numeric, 2, kurtosi)
+kurtosis <- kurtosis[(kurtosis > 3.0) | (kurtosis < -3.0)]
+
+# not very useful in our case
+ks.p.val <- NULL
+for (i in 1:length(df.numeric)) {
+  test.stat <- ks.test(df.numeric[i], rnorm(1000))
+  ks.p.val[i] <- test.stat$p.value
+}
+
+for(col in names(skewed)){
+  if(0 %in% df.numeric[, col]) {
+    df.numeric[,col] <- log(1+df.numeric[,col])
+  }
+  else {
+    df.numeric[,col] <- log(df.numeric[,col])
+  }
+}
+
+# normalize the data
+scaler <- preProcess(df.numeric)
+df.numeric <- predict(scaler, df.numeric)
+```
+For the rest of the categoric features we can one-hot encode each value to get as many splits in the data as possible
+```{r}
+# one hot encoding for categorical data
+# sparse data performs better for trees/xgboost
+dummy <- dummyVars(" ~ .",data=df.combined[,cat_features])
+df.categoric <- data.frame(predict(dummy,newdata=df.combined[,cat_features]))
+```
+
+We can bin houses into sequences of 20, which will give us 7 different bins for a feature built in a year to fall into. This will allow us to differentiate the different times/era houses, garages and remodeling took place.
+```{r}
+# every 20 years create a new bin
+# 7 total bins
+# min year is 1871, max year is 2010!
+year.map = function(col.combined, col.name) {
+  for (i in 1:7) {
+    year.seq = seq(1871+(i-1)*20, 1871+i*20-1)
+    idx = which(df.combined[,col.combined] %in% year.seq)
+    df.categoric[idx,col.name] = i
+  }
+  return(df.categoric)
+}
+
+# we'll c
+df.categoric['GarageYrBltBin'] = 0
+df.categoric <- year.map('GarageYrBlt', 'GarageYrBltBin')
+df.categoric['YearBuiltBin'] = 0
+df.categoric <- year.map('YearBuilt','YearBuiltBin')
+df.categoric['YearRemodAddBin'] = 0
+df.categoric <- year.map('YearRemodAdd', 'YearRemodAddBin')
+```
+
+Now that we 3 new columns that generalize what year a house, garage and remodeling took place we'll need to one-hot encode these columns so that each bin is turned into a binary column. The new columns are ranged from 1-7, but we don't know what specific order they follow so it will benefit us more to give each bin its own column.
+```{r}
+bin.cols <- c('GarageYrBltBin', 'YearBuiltBin', 'YearRemodAddBin')
+
+for (col in bin.cols) {
+  df.categoric <- cbind(df.categoric, model.matrix(~.-1, df.categoric[col]))
+}
+
+# lets drop the orginal 'GarageYrBltBin', 'YearBuiltBin', 'YearRemodAddBin' from our dataframe
+df.categoric <- df.categoric[,!names(df.categoric) %in% bin.cols]
+```
+
+
