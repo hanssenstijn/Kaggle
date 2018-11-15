@@ -58,5 +58,24 @@ ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=SalePrice)) +
     geom_histogram(fill="blue",binwidth=10000)
 ```
 
+### Determine the correlation of the numeric variables towards Saleprice
+First a new dataset will be created containing only the nummeric variables. Correlation will be calculated to determine which variables correlate with others. For sale price we see that `OverallQual` and `GrLivArea` are the highest correlated to SalePrice.
+```{r}
+# store the numeric variables
+idx = which(sapply(df.combined, is.numeric))
+numVar = names(idx)
+df.num = df.combined[,numVar]
+# calculate the correlation
+corNum = cor(df.num,use="pairwise.complete.obs")
 
+# select and sort on SalePrice
+corSorted <- as.matrix(sort(corNum[,'SalePrice'], decreasing = TRUE))
+# select only corelations above 0.5
+CorHigh <- names(which(apply(corSorted, 1, function(x) abs(x)>0.5)))
+corNum <- corNum[CorHigh, CorHigh]
+
+corrplot.mixed(corNum, tl.col="black", tl.pos = "lt")
+```
+
+### Investigate the variables OverQuall and GrLivArea
 
