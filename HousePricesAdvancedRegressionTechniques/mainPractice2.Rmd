@@ -35,9 +35,18 @@ train <- read.csv("train.csv",stringsAsFactors = F)
 test <- read.csv("test.csv", stringsAsFactors =  F)
 ```
 
-### Check datasets
-The structure shows that the variables are integers or characters. 
+### Check and edit the datasets
+The structure shows that the variables are integers or characters. Furthermore, the iD variables can be removed from both datasets. But for the prediction of the test set we will need the Id variable thus those will be saved. The test set does not contain Saleprices, thus we will create it and give it "Na" values. Now that the datasets have equal rows and columns they will be combined.
 ```{r}
 str(train)
+
+train$Id = NULL
+testID = test$Id
+test$Id = NULL
+
+test$SalePrice = NA
+
+df.combined = rbind(train,test)
+dim(df.combined)
 ```
 
