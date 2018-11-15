@@ -78,4 +78,17 @@ corrplot.mixed(corNum, tl.col="black", tl.pos = "lt")
 ```
 
 ### Investigate the variables OverQuall and GrLivArea
+As expected the improvement in Quality score of the house results in a higher house price. The Above grade (ground) living area square feet shows that there are two houses with a very high `GrLivArea` but nonetheless very low `SalePrice` which might indicate that these two points are outliers.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(OverallQual),y=SalePrice)) +
+    geom_boxplot()
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=GrLivArea,y=SalePrice)) +
+    geom_point() +
+    geom_smooth(method="lm")
+which(df.combined$GrLivArea > 4500)
+# 2550 is from the test set so it wont have a saleprice
+df.combined[c(524,1299),c('SalePrice',"GrLivArea","OverallQual")]
+```
+
+
 
