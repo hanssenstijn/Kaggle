@@ -50,3 +50,13 @@ df.combined = rbind(train,test)
 dim(df.combined)
 ```
 
+### Exploring and visualizing the data
+The summary of the Saleprice column shows that the average price for selling a house is `180921`. The median is lower than the mean thus the data will be Right-Skewed (Positive skewed), this is shown in the histogram.
+```{r}
+summary(df.combined$SalePrice)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=SalePrice)) +
+    geom_histogram(fill="blue",binwidth=10000)
+```
+
+
+
