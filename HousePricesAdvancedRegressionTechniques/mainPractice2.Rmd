@@ -90,5 +90,40 @@ which(df.combined$GrLivArea > 4500)
 df.combined[c(524,1299),c('SalePrice',"GrLivArea","OverallQual")]
 ```
 
+### Handeling missing data
+In total 35 have missing values, whereas one of them is the SalePrice which we had set to Na for the test set (meaning that we are gonne clean 34 variables). The variables with  the highest amount of missing values are for the `PoolQC`, `MiscFeature`,`Alley` and `Fence`.
+```{r}
+na.cols <- which(colSums(is.na(df.combined)) > 0)
+sort(colSums(sapply(df.combined[na.cols], is.na)), decreasing = TRUE)
+```
+
+#### PoolQC
+   Ex   Excellent
+   Gd   Good
+   TA   Average/Typical
+   Fa   Fair
+   NA   No Pool
+Pool quallity seems to be ordinal. Were No pool is the lowest and Exellent pool can be set as the highest.
+```{r}
+table(df.combined$PoolQC)
+df.combined$PoolQC[is.na(df.combined$PoolQC)] = "None"
+# label encoding variable
+qualities <- c('None' = 0, 'Po' = 1, 'Fa' = 2, 'TA' = 3, 'Gd' = 4, 'Ex' = 5)
+df.combined$PoolQC = as.integer(revalue(df.combined$PoolQC,qualities))
+table(df.combined$PoolQC)
+sum(table(df.combined$PoolQC))
+```
+Do all the house that have a pool (determined by pool quality) also have a pool area. We see that 3 variables do have a pool area but not a pool quality, these will get their quality score based on the overall house quality.
+```{r}
+which(df.combined$PoolQC > 0 & df.combined$PoolArea == 0)
+which(df.combined$PoolQC == 0 & df.combined$PoolArea > 0)
+df.combined[c(2421,2504,2600),c("PoolArea","PoolQC","OverallQual")]
+df.combined$PoolQC[2421] = 4
+df.combined$PoolQC[2504] = 5
+df.combined$PoolQC[2600] = 2
+which(df.combined$PoolQC == 0 & df.combined$PoolArea > 0)
+sum(table(df.combined$PoolQC))
+```
+
 
 
