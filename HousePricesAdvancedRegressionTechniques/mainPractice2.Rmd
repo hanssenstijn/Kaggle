@@ -125,5 +125,435 @@ which(df.combined$PoolQC == 0 & df.combined$PoolArea > 0)
 sum(table(df.combined$PoolQC))
 ```
 
+#### Miscellaneous feature
+   Elev Elevator
+   Gar2 2nd Garage (if not described in garage section)
+   Othr Other
+   Shed Shed (over 100 SF)
+   TenC Tennis Court
+   NA   None
+This feature is not ordinal. Thus we will transform it into a factos
+```{r}
+df.combined$MiscFeature[is.na(df.combined$MiscFeature)] = "None"
+df.combined$MiscFeature = as.factor(df.combined$MiscFeature)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=MiscFeature,y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+table(df.combined$MiscFeature)
+```
+
+#### Alley
+   Grvl Gravel
+   Pave Paved
+   NA   No alley access
+  
+```{r}
+df.combined$Alley[is.na(df.combined$Alley)] = "None"
+df.combined$Alley = as.factor(df.combined$Alley)
+
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=Alley,y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+```
+
+#### Fence
+   GdPrv    Good Privacy
+   MnPrv    Minimum Privacy
+   GdWo Good Wood
+   MnWw Minimum Wood/Wire
+   NA   No Fence
+First tought would be that it is a ordinal variable. However, the ggplot shows that having no fence means still a very high sales price. Thus making this variable a factor.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(Fence),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$Fence[is.na(df.combined$Fence)] = "None"
+df.combined$Fence = as.factor(df.combined$Fence)
+sum(table(df.combined$Fence))
+```
+
+#### FireplacesQuality
+   Ex   Excellent - Exceptional Masonry Fireplace
+   Gd   Good - Masonry Fireplace in main level
+   TA   Average - Prefabricated Fireplace in main living area or Masonry Fireplace in basement
+   Fa   Fair - Prefabricated Fireplace in basement
+   Po   Poor - Ben Franklin Stove
+   NA   No Fireplace
+The quality of the fireplaces seems to be ordinal. 
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(FireplaceQu),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$FireplaceQu[is.na(df.combined$FireplaceQu)] = "None"
+df.combined$FireplaceQu = as.integer(revalue(df.combined$FireplaceQu,qualities))
+table(df.combined$FireplaceQu)
+sum(table(df.combined$FireplaceQu))
+```
+
+#### Lot
+Lot frontage : Linear feet of street connected to property. Give the median of each neighborhood to the missing values.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$LotFrontage),],aes(x=as.factor(Neighborhood),y=LotFrontage)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+for (i in 1:nrow(df.combined)){
+        if(is.na(df.combined$LotFrontage[i])){
+               df.combined$LotFrontage[i] <- as.integer(median(df.combined$LotFrontage[df.combined$Neighborhood==df.combined$Neighborhood[i]], na.rm=TRUE)) 
+        }
+}
+
+```
+Lot shape
+   Reg  Regular 
+   IR1  Slightly irregular
+   IR2  Moderately Irregular
+   IR3  Irregular
+An irregular lot shape seems to have much higher salesrpices than the regular shapes.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(LotShape),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$LotShape = as.integer(revalue(df.combined$LotShape,c('Reg' = 0, 'IR1' = 1, 'IR2' = 2, 'IR3' = 3)))
+table(df.combined$LotShape)
+```
+LotConfig
+   Inside   Inside lot
+   Corner   Corner lot
+   CulDSac  Cul-de-sac
+   FR2  Frontage on 2 sides of property
+   FR3  Frontage on 3 sides of property
+This variable is a factor.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(LotConfig),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$LotConfig = as.factor(df.combined$LotConfig)
+table(df.combined$LotConfig)
+sum(table(df.combined$LotConfig))
+```
+
+#### Garage variables
+Garage year built
+The ones with missing values will be given the year that the house was built.
+```{r}
+df.combined$GarageYrBlt[is.na(df.combined$GarageYrBlt)] = df.combined$YearBuilt[is.na(df.combined$GarageYrBlt)]
+```
+Garage type
+ 2Types   More than one type of garage
+   Attchd   Attached to home
+   Basment  Basement Garage
+   BuiltIn  Built-In (Garage part of house - typically has room above garage)
+   CarPort  Car Port
+   Detchd   Detached from home
+   NA   No Garage
+```{r}
+length(which(is.na(df.combined$GarageType) & is.na(df.combined$GarageFinish) & is.na(df.combined$GarageCond) & is.na(df.combined$GarageQual)))
+kable(df.combined[!is.na(df.combined$GarageType) & is.na(df.combined$GarageFinish), c('GarageCars', 'GarageArea', 'GarageType', 'GarageCond', 'GarageQual', 'GarageFinish')])
+df.combined$GarageCond[2127] = names(sort(-table(df.combined$GarageCond)))[1]
+df.combined$GarageQual[2127] = names(sort(-table(df.combined$GarageQual)))[1]
+df.combined$GarageFinish[2127] = names(sort(-table(df.combined$GarageFinish)))[1]
+kable(df.combined[2127, c('GarageYrBlt', 'GarageCars', 'GarageArea', 'GarageType', 'GarageCond', 'GarageQual', 'GarageFinish')])
+df.combined$GarageCars[2577] <- 0
+df.combined$GarageArea[2577] <- 0
+df.combined$GarageType[2577] <- NA
+df.combined$GarageType[is.na(df.combined$GarageType)] = "None"
+df.combined$GarageType = as.factor(df.combined$GarageType)
+table(df.combined$GarageType)
+sum(table(df.combined$GarageType))
+```
+
+Garage Finish
+   Fin  Finished
+   RFn  Rough Finished  
+   Unf  Unfinished
+   NA   No Garage
+```{r}
+df.combined$GarageFinish[is.na(df.combined$GarageFinish)] = "None"
+df.combined$GarageFinish = as.integer(revalue(df.combined$GarageFinish,c('None' = 0,'Unf' = 1,'RFn' = 2,'Fin' = 3)))
+table(df.combined$GarageFinish)
+```
+GarageQuality
+   Ex   Excellent
+   Gd   Good
+   TA   Typical/Average
+   Fa   Fair
+   Po   Poor
+   NA   No Garage
+```{r}
+df.combined$GarageQual[is.na(df.combined$GarageQual)] <- 'None'
+df.combined$GarageQual<-as.integer(revalue(df.combined$GarageQual, qualities))
+table(df.combined$GarageQual)
+```
+
+
+GarageCondition
+   Ex   Excellent
+   Gd   Good
+   TA   Typical/Average
+   Fa   Fair
+   Po   Poor
+   NA   No Garage
+```{r}
+df.combined$GarageCond[is.na(df.combined$GarageCond)] = "None"
+df.combined$GarageCond = as.integer((revalue(df.combined$GarageCond,qualities)))
+table(df.combined$GarageCond)
+```
+
+#### Basement
+
+```{r}
+length(which(is.na(df.combined$BsmtQual) & is.na(df.combined$BsmtCond) & is.na(df.combined$BsmtExposure) & is.na(df.combined$BsmtFinType1) & is.na(df.combined$BsmtFinType2)))
+
+df.combined[!is.na(df.combined$BsmtFinType1) & (is.na(df.combined$BsmtCond)|is.na(df.combined$BsmtQual)|is.na(df.combined$BsmtExposure)|is.na(df.combined$BsmtFinType2)), c('BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2')]
+
+df.combined$BsmtFinType2[333] = names(sort(-table(df.combined$BsmtFinType2)))[1]
+df.combined$BsmtExposure[c(949,1488,2349)] = names(sort(-table(df.combined$BsmtExposure)))[1]
+df.combined$BsmtCond[c(2014,2186,2525)] = names(sort(-table(df.combined$BsmtCond)))[1]
+df.combined$BsmtQual[c(2218,2219)] = names(sort(-table(df.combined$BsmtQual)))[1]
+```
+BsmtQual
+   Ex   Excellent (100+ inches) 
+   Gd   Good (90-99 inches)
+   TA   Typical (80-89 inches)
+   Fa   Fair (70-79 inches)
+   Po   Poor (&lt;70 inches
+   NA   No Basement
+```{r}
+df.combined$BsmtQual[is.na(df.combined$BsmtQual)] = "None"
+df.combined$BsmtQual = as.integer(revalue(df.combined$BsmtQual,qualities))
+table(df.combined$BsmtQual)
+```
+BsmtCond
+   Ex   Excellent
+   Gd   Good
+   TA   Typical - slight dampness allowed
+   Fa   Fair - dampness or some cracking or settling
+   Po   Poor - Severe cracking, settling, or wetness
+   NA   No Basement
+```{r}
+df.combined$BsmtCond[is.na(df.combined$BsmtCond)] = "None"
+df.combined$BsmtCond = as.integer(revalue(df.combined$BsmtCond,qualities))
+table(df.combined$BsmtCond)
+```
+BsmtExposure
+   Gd   Good Exposure
+   Av   Average Exposure (split levels or foyers typically score average or above)  
+   Mn   Mimimum Exposure
+   No   No Exposure
+   NA   No Basement
+```{r}
+df.combined$BsmtExposure[is.na(df.combined$BsmtExposure)] = "None"
+df.combined$BsmtExposure = as.integer(revalue(df.combined$BsmtExposure,c('None'=0,'No'=1,'Mn'=2,'Av'=3,'Gd'=4)))
+table(df.combined$BsmtExposure)
+sum(table(df.combined$BsmtExposure))
+```
+BsmtFinType1
+   GLQ  Good Living Quarters
+   ALQ  Average Living Quarters
+   BLQ  Below Average Living Quarters   
+   Rec  Average Rec Room
+   LwQ  Low Quality
+   Unf  Unfinshed
+   NA   No Basement
+```{r}
+df.combined$BsmtFinType1[is.na(df.combined$BsmtFinType1)] = "None"
+df.combined$BsmtFinType1 = as.integer(revalue(df.combined$BsmtFinType1,c('None'=0, 'Unf'=1, 'LwQ'=2, 'Rec'=3, 'BLQ'=4, 'ALQ'=5, 'GLQ'=6)))
+table(df.combined$BsmtFinType1)
+sum(table(df.combined$BsmtFinType1))
+```
+
+Still some missing values. All of these will be set to zero for the reason that these ones just dont have a garage.
+```{r}
+df.combined[(is.na(df.combined$BsmtFullBath)|is.na(df.combined$BsmtHalfBath)|is.na(df.combined$BsmtFinSF1)|is.na(df.combined$BsmtFinSF2)|is.na(df.combined$BsmtUnfSF)|is.na(df.combined$TotalBsmtSF)), c('BsmtQual', 'BsmtFullBath', 'BsmtHalfBath', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF')]
+
+df.combined$BsmtFullBath[is.na(df.combined$BsmtFullBath)] <-0
+df.combined$BsmtHalfBath[is.na(df.combined$BsmtHalfBath)] <-0
+df.combined$BsmtFinSF1[is.na(df.combined$BsmtFinSF1)] <-0
+df.combined$BsmtFinSF2[is.na(df.combined$BsmtFinSF2)] <-0
+df.combined$BsmtUnfSF[is.na(df.combined$BsmtUnfSF)] <-0
+df.combined$TotalBsmtSF[is.na(df.combined$TotalBsmtSF)] <-0
+```
+
+#### Masonry
+
+```{r}
+length(which(is.na(df.combined$MasVnrArea) & is.na(df.combined$MasVnrType)))
+df.combined[!is.na(df.combined$MasVnrArea) & is.na(df.combined$MasVnrType),c('MasVnrArea','MasVnrType')]
+df.combined$MasVnrType[2611] = names(sort(-table(df.combined$MasVnrType)))[2]
+df.combined[2611,c('MasVnrType','MasVnrArea')]
+```
+
+   BrkCmn   Brick Common
+   BrkFace  Brick Face
+   CBlock   Cinder Block
+   None None
+   Stone    Stone
+   
+```{r}
+df.combined$MasVnrType[is.na(df.combined$MasVnrType)] = "None"
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(MasVnrType),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+
+df.combined$MasVnrType<-as.integer(revalue(df.combined$MasVnrType, c('None'=0, 'BrkCmn'=0, 'BrkFace'=1, 'Stone'=2)))
+table(df.combined$MasVnrType)
+```
+MasVnrArea: Masonry veneer area in square feet
+```{r}
+df.combined$MasVnrArea[is.na(df.combined$MasVnrArea)] = 0
+```
+
+#### MSzonning
+   A    Agriculture
+   C    Commercial
+   FV   Floating Village Residential
+   I    Industrial
+   RH   Residential High Density
+   RL   Residential Low Density
+   RP   Residential Low Density Park 
+   RM   Residential Medium Density
+MSZoning: Identifies the general zoning classification of the sale.
+```{r}
+which(is.na(df.combined$MSZoning))
+df.combined$MSZoning[is.na(df.combined$MSZoning)] = names(sort(-table(df.combined$MSZoning)))[1]
+df.combined$MSZoning = as.factor(df.combined$MSZoning)
+table(df.combined$MSZoning)
+sum(table(df.combined$MSZoning))
+```
+
+#### Kitchen
+
+KitchenQual
+   Ex   Excellent
+   Gd   Good
+   TA   Typical/Average
+   Fa   Fair
+   Po   Poor
+```{r}
+df.combined$KitchenQual[is.na(df.combined$KitchenQual)] = names(sort(-table(df.combined$KitchenQual)))[1]
+df.combined$KitchenQual = df.combined$KitchenQual = as.integer(revalue(df.combined$KitchenQual,qualities))
+table(df.combined$KitchenQual)
+sum(table(df.combined$KitchenQual))
+```
+
+Utilities
+   AllPub   All public Utilities (E,G,W,& S)    
+   NoSewr   Electricity, Gas, and Water (Septic Tank)
+   NoSeWa   Electricity and Gas Only
+   ELO  Electricity only  
+```{r}
+which(is.na(df.combined$Utilities))
+table(df.combined$Utilities)
+```
+
+Home functionality
+   Typ  Typical Functionality
+   Min1 Minor Deductions 1
+   Min2 Minor Deductions 2
+   Mod  Moderate Deductions
+   Maj1 Major Deductions 1
+   Maj2 Major Deductions 2
+   Sev  Severely Damaged
+   Sal  Salvage only
+```{r}
+df.combined$Functional[is.na(df.combined$Functional)] = names(sort(-table(df.combined$Functional)))[1]
+df.combined$Functional = df.combined$Functional = as.integer(revalue(df.combined$Functional,c('Sal'=0, 'Sev'=1, 'Maj2'=2, 'Maj1'=3, 'Mod'=4, 'Min2'=5, 'Min1'=6, 'Typ'=7)))
+table(df.combined$Functional)
+sum(table(df.combined$Functional))
+```
+
+Exterior
+sbShng  Asbestos Shingles
+   AsphShn  Asphalt Shingles
+   BrkComm  Brick Common
+   BrkFace  Brick Face
+   CBlock   Cinder Block
+   CemntBd  Cement Board
+   HdBoard  Hard Board
+   ImStucc  Imitation Stucco
+   MetalSd  Metal Siding
+   Other    Other
+   Plywood  Plywood
+   PreCast  PreCast 
+   Stone    Stone
+   Stucco   Stucco
+   VinylSd  Vinyl Siding
+   Wd Sdng  Wood Siding
+   WdShing  Wood Shingles
+```{r}
+df.combined$Exterior1st[is.na(df.combined$Exterior1st)] = names(sort(-table(df.combined$Exterior1st)))[1]
+df.combined$Exterior1st = as.factor(df.combined$Exterior1st)
+sum(table(df.combined$Exterior1st))
+
+df.combined$Exterior2nd[is.na(df.combined$Exterior2nd)] = names(sort(-table(df.combined$Exterior2nd)))[1]
+df.combined$Exterior2nd = as.factor(df.combined$Exterior2nd)
+sum(table(df.combined$Exterior2nd))
+```
+
+ExterQual
+   Ex   Excellent
+   Gd   Good
+   TA   Average/Typical
+   Fa   Fair
+   Po   Poor
+```{r}
+df.combined$ExterQual = as.integer(revalue(df.combined$ExterQual,qualities))
+table(df.combined$ExterQual)
+sum(table(df.combined$ExterQual))
+```
+
+ExterCond
+   Ex   Excellent
+   Gd   Good
+   TA   Average/Typical
+   Fa   Fair
+   Po   Poor
+```{r}
+df.combined$ExterCond = as.integer(revalue(df.combined$ExterCond,qualities))
+table(df.combined$ExterCond)
+sum(table(df.combined$ExterCond))
+```
+
+#### Electrical
+   SBrkr    Standard Circuit Breakers & Romex
+   FuseA    Fuse Box over 60 AMP and all Romex wiring (Average) 
+   FuseF    60 AMP Fuse Box and mostly Romex wiring (Fair)
+   FuseP    60 AMP Fuse Box and mostly knob & tube wiring (poor)
+   Mix  Mixed
+```{r}
+df.combined$Electrical[is.na(df.combined$Electrical)] = names(sort(-table(df.combined$Electrical)))[1]
+df.combined$Electrical = as.factor(df.combined$Electrical)
+table(df.combined$Electrical)
+sum(table(df.combined$Electrical))
+```
+
+#### Saletype and condition
+   WD   Warranty Deed - Conventional
+   CWD  Warranty Deed - Cash
+   VWD  Warranty Deed - VA Loan
+   New  Home just constructed and sold
+   COD  Court Officer Deed/Estate
+   Con  Contract 15% Down payment regular terms
+   ConLw    Contract Low Down payment and low interest
+   ConLI    Contract Low Interest
+   ConLD    Contract Low Down
+   Oth  Other
+```{r}
+df.combined$SaleType[is.na(df.combined$SaleType)] = names(sort(-table(df.combined$SaleType)))[1]
+df.combined$SaleType = as.factor(df.combined$SaleType)
+```
+sale condition
+   Normal   Normal Sale
+   Abnorml  Abnormal Sale -  trade, foreclosure, short sale
+   AdjLand  Adjoining Land Purchase
+   Alloca   Allocation - two linked properties with separate deeds, typically condo with a garage unit  
+   Family   Sale between family members
+   Partial  Home was not completed when last assessed (associated with New Homes) number of bedrooms
+```{r}
+df.combined$SaleCondition = as.factor(df.combined$SaleCondition)
+table(df.combined$SaleCondition)
+sum(table(df.combined$SaleCondition))
+```
+   
 
 
