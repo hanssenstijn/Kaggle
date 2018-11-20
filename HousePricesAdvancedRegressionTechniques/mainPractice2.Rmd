@@ -1015,3 +1015,10 @@ multiplot(b1, b2, b3, b4, b5, b6, b7, b8, layout=layout)
 
 ```
 
+### Feature engineering
+
+The bathroom variables will be combined for the reason that I find it strange that these don't have a important role. By combining these I expect a more prominent role.
+```{r}
+df.combined$TotBathrooms = df.combined$BsmtFullBath + (df.combined$BsmtHalfBath * 0.5) + df.combined$FullBath + (df.combined$HalfBath * 0.5)
+```
+
