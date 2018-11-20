@@ -761,4 +761,32 @@ sum(table(df.combined$Foundation))
 ```
 
 Heating: Type of heating
+   Floor    Floor Furnace
+   GasA Gas forced warm air furnace
+   GasW Gas hot water or steam heat
+   Grav Gravity furnace 
+   OthW Hot water or steam heat other than gas
+   Wall Wall furnace
+```{r}
+table(df.combined$Heating)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(Heating),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$Heating = as.factor(df.combined$Heating)
+sum(table(df.combined$Heating))
+```
+
+HeatingQC: Heating quality and condition
+   Ex   Excellent
+   Gd   Good
+   TA   Average/Typical
+   Fa   Fair
+   Po   Poor
+This variable seems to have an order. Thus we will make an ordinal variable from it.  
+```{r}
+table(df.combined$HeatingQC)
+df.combined$HeatingQC = df.combined$HeatingQC = as.integer(revalue(df.combined$HeatingQC,qualities))
+table(df.combined$HeatingQC)
+sum(table(df.combined$HeatingQC))
+```
 
