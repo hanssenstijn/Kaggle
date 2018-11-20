@@ -785,8 +785,35 @@ HeatingQC: Heating quality and condition
 This variable seems to have an order. Thus we will make an ordinal variable from it.  
 ```{r}
 table(df.combined$HeatingQC)
-df.combined$HeatingQC = df.combined$HeatingQC = as.integer(revalue(df.combined$HeatingQC,qualities))
+df.combined$HeatingQC = as.integer(revalue(df.combined$HeatingQC,qualities))
 table(df.combined$HeatingQC)
 sum(table(df.combined$HeatingQC))
+```
+
+CentralAir: Central air conditioning
+   N    No
+   Y    Yes
+```{r}
+table(df.combined$CentralAir)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(CentralAir),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$CentralAir = as.integer(revalue(df.combined$CentralAir,c('N'=0,'Y'=1)))
+table(df.combined$CentralAir)
+sum(table(df.combined$CentralAir))
+```
+
+PavedDrive: Paved driveway
+   Y    Paved 
+   P    Partial Pavement
+   N    Dirt/Gravel
+```{r}
+table(df.combined$PavedDrive)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(PavedDrive),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$PavedDrive = as.integer(revalue(df.combined$PavedDrive,c('N'=0,'P'=1,'Y'=2)))
+table(df.combined$PavedDrive)
+sum(table(df.combined$PavedDrive))
 ```
 
