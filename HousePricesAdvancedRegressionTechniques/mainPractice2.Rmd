@@ -362,6 +362,15 @@ table(df.combined$BsmtFinType1)
 sum(table(df.combined$BsmtFinType1))
 ```
 
+```{r}
+df.combined$BsmtFinType2[is.na(df.combined$BsmtFinType2)] <- 'None'
+FinType <- c('None'=0, 'Unf'=1, 'LwQ'=2, 'Rec'=3, 'BLQ'=4, 'ALQ'=5, 'GLQ'=6)
+
+df.combined$BsmtFinType2<-as.integer(revalue(df.combined$BsmtFinType2, FinType))
+table(df.combined$BsmtFinType2)
+```
+
+
 Still some missing values. All of these will be set to zero for the reason that these ones just dont have a garage.
 ```{r}
 df.combined[(is.na(df.combined$BsmtFullBath)|is.na(df.combined$BsmtHalfBath)|is.na(df.combined$BsmtFinSF1)|is.na(df.combined$BsmtFinSF2)|is.na(df.combined$BsmtUnfSF)|is.na(df.combined$TotalBsmtSF)), c('BsmtQual', 'BsmtFullBath', 'BsmtHalfBath', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF')]
@@ -554,6 +563,50 @@ df.combined$SaleCondition = as.factor(df.combined$SaleCondition)
 table(df.combined$SaleCondition)
 sum(table(df.combined$SaleCondition))
 ```
-   
+
+#### Label encoding and factorizing the remaining character variables
+Check which variables are still charater. Per variable will be decided if it has to be a categorical or ordinal variable/
+```{r}
+x = names(df.combined[,sapply(df.combined,is.character)])
+x
+```
+
+Street
+   Grvl Gravel  
+   Pave Paved
+```{r}
+table(df.combined$Street)
+df.combined$Street = df.combined$Street = as.integer(revalue(df.combined$Street,c('Grvl'=0, 'Pave'=1)))
+table(df.combined$Street)
+sum(table(df.combined$Street))
+```
+
+LandContour = Flatness of the property
+   Lvl  Near Flat/Level 
+   Bnk  Banked - Quick and significant rise from street grade to building
+   HLS  Hillside - Significant slope from side to side
+   Low  Depression
+```{r}
+table(df.combined$LandContour)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(LandContour),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$LandContour = as.factor(df.combined$LandContour)
+sum(table(df.combined$LandContour))
+```
+LandSlope = slope of property
+   Gtl  Gentle slope
+   Mod  Moderate Slope  
+   Sev  Severe Slope
+```{r}
+table(df.combined$LandSlope)
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),],aes(x=as.factor(LandSlope),y=SalePrice)) +
+    geom_bar(stat='summary',, fun.y = "median") +
+    geom_label(stat = "count", aes(label = ..count.., y = ..count..))
+df.combined$LandSlope = as.factor(df.combined$LandSlope)
+sum(table(df.combined$LandSlope))
+```
+
+
 
 
