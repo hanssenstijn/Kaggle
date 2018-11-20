@@ -817,3 +817,47 @@ table(df.combined$PavedDrive)
 sum(table(df.combined$PavedDrive))
 ```
 
+Check which variables are still charater. Per variable will be decided if it has to be a categorical or ordinal variable/
+```{r}
+y = names(df.combined[,sapply(df.combined,is.character)])
+y
+```
+
+## Changing numeric variabels into factors
+
+The months sold variable is set as ordinal. However January is ofcourse not better than May. Therefor will this variable be set as categorical
+```{r}
+str(df.combined$MoSold)
+df.combined$MoSold = as.factor(df.combined$MoSold)
+```
+
+MSsubclass
+
+MSSubClass: Identifies the type of dwelling involved in the sale.	
+
+        20	1-STORY 1946 & NEWER ALL STYLES
+        30	1-STORY 1945 & OLDER
+        40	1-STORY W/FINISHED ATTIC ALL AGES
+        45	1-1/2 STORY - UNFINISHED ALL AGES
+        50	1-1/2 STORY FINISHED ALL AGES
+        60	2-STORY 1946 & NEWER
+        70	2-STORY 1945 & OLDER
+        75	2-1/2 STORY ALL AGES
+        80	SPLIT OR MULTI-LEVEL
+        85	SPLIT FOYER
+        90	DUPLEX - ALL STYLES AND AGES
+       120	1-STORY PUD (Planned Unit Development) - 1946 & NEWER
+       150	1-1/2 STORY PUD - ALL AGES
+       160	2-STORY PUD - 1946 & NEWER
+       180	PUD - MULTILEVEL - INCL SPLIT LEV/FOYER
+       190	2 FAMILY CONVERSION - ALL STYLES AND AGES
+
+```{r}
+df.combined$MSSubClass = as.factor(df.combined$MSSubClass)
+
+df.combined$MSSubClass<-revalue(df.combined$MSSubClass, c('20'='1 story 1946+', '30'='1 story 1945-', '40'='1 story unf attic', '45'='1,5 story unf', '50'='1,5 story fin', '60'='2 story 1946+', '70'='2 story 1945-', '75'='2,5 story all ages', '80'='split/multi level', '85'='split foyer', '90'='duplex all style/age', '120'='1 story PUD 1946+', '150'='1,5 story PUD all', '160'='2 story PUD 1946+', '180'='PUD multilevel', '190'='2 family conversion'))
+
+str(df.combined$MSSubClass)
+```
+
+
