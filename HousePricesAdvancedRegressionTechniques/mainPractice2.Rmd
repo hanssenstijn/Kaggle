@@ -824,7 +824,7 @@ y = names(df.combined[,sapply(df.combined,is.character)])
 y
 ```
 
-## Changing numeric variabels into factors
+### Changing numeric variabels into factors
 
 The months sold variable is set as ordinal. However January is ofcourse not better than May. Therefor will this variable be set as categorical
 ```{r}
@@ -861,18 +861,18 @@ df.combined$MSSubClass<-revalue(df.combined$MSSubClass, c('20'='1 story 1946+', 
 str(df.combined$MSSubClass)
 ```
 
-## Correcting a typo
+### Correcting a typo
 ```{r}
 df.combined$GarageYrBlt[2593] <- 2007 
 ```
 
-## Save numeric and factor variables
+### Save numeric and factor variables
 ```{r}
 numericVar = which(sapply(df.combined,is.numeric))
 catVar = which(sapply(df.combined,is.factor))
 ```
 
-## Check correlation agin
+### Check correlation agin
 
 ```{r}
 all_numVar <- df.combined[, numericVar]
@@ -887,4 +887,131 @@ cor_numVar <- cor_numVar[CorHigh, CorHigh]
 corrplot.mixed(cor_numVar, tl.col="black", tl.pos = "lt", tl.cex = 0.7,cl.cex = .7, number.cex=.7)
 ```
 
+### Distribution Above Ground Living Area
+
+```{r}
+s1 <- ggplot(data= df.combined, aes(x=GrLivArea)) +
+        geom_density() + labs(x='Square feet living area')
+s2 <- ggplot(data=df.combined, aes(x=as.factor(TotRmsAbvGrd))) +
+        geom_histogram(stat='count') + labs(x='Rooms above Ground')
+s3 <- ggplot(data= df.combined, aes(x=X1stFlrSF)) +
+        geom_density() + labs(x='Square feet first floor')
+s4 <- ggplot(data= df.combined, aes(x=X2ndFlrSF)) +
+        geom_density() + labs(x='Square feet second floor')
+s5 <- ggplot(data= df.combined, aes(x=TotalBsmtSF)) +
+        geom_density() + labs(x='Square feet basement')
+s6 <- ggplot(data= df.combined[df.combined$LotArea<100000,], aes(x=LotArea)) +
+        geom_density() + labs(x='Square feet lot')
+s7 <- ggplot(data= df.combined, aes(x=LotFrontage)) +
+        geom_density() + labs(x='Linear feet lot frontage')
+s8 <- ggplot(data= df.combined, aes(x=LowQualFinSF)) +
+        geom_histogram() + labs(x='Low quality square feet 1st & 2nd')
+
+layout <- matrix(c(1,2,5,3,4,8,6,7),4,2,byrow=TRUE)
+multiplot(s1, s2, s3, s4, s5, s6, s7, s8, layout=layout)
+```
+
+###The most important categorical variable; Neighborhood
+
+The first graph shows the median SalePrice by Neighorhood (frequency of training set). The second graph below shows the frequencies across all data.
+
+```{r, warning=FALSE, message=FALSE, out.width="100%"}
+n1 <- ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=Neighborhood, y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "median", fill='blue') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3) +
+        geom_hline(yintercept=163000, linetype="dashed", color = "red") #dashed line is median SalePrice
+n2 <- ggplot(data=df.combined, aes(x=Neighborhood)) +
+        geom_histogram(stat='count')+
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3)+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grid.arrange(n1, n2)
+```
+
+### Overall Quality frequency distribution, and other Quality variables
+```{r, warning=FALSE, message=FALSE, out.width="100%"}
+q1 <- ggplot(data=df.combined, aes(x=as.factor(OverallQual))) +
+        geom_histogram(stat='count')
+q2 <- ggplot(data=df.combined, aes(x=as.factor(ExterQual))) +
+        geom_histogram(stat='count')
+q3 <- ggplot(data=df.combined, aes(x=as.factor(BsmtQual))) +
+        geom_histogram(stat='count')
+q4 <- ggplot(data=df.combined, aes(x=as.factor(KitchenQual))) +
+        geom_histogram(stat='count')
+q5 <- ggplot(data=df.combined, aes(x=as.factor(GarageQual))) +
+        geom_histogram(stat='count')
+q6 <- ggplot(data=df.combined, aes(x=as.factor(FireplaceQu))) +
+        geom_histogram(stat='count')
+q7 <- ggplot(data=df.combined, aes(x=as.factor(PoolQC))) +
+        geom_histogram(stat='count')
+
+layout <- matrix(c(1,2,8,3,4,8,5,6,7),3,3,byrow=TRUE)
+multiplot(q1, q2, q3, q4, q5, q6, q7, layout=layout)
+
+```
+
+###The second most important categorical variable; MSSubClass
+
+The first visualization shows the median SalePrice by MSSubClass (frequency of training set). Most houses are relatively new, and have one or two stories.
+
+```{r, warning=FALSE, out.width="100%"}
+ms1 <- ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=MSSubClass, y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "median", fill='blue') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3) +
+        geom_hline(yintercept=163000, linetype="dashed", color = "red") #dashed line is median SalePrice
+ms2 <- ggplot(data=df.combined, aes(x=MSSubClass)) +
+        geom_histogram(stat='count')+
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grid.arrange(ms1, ms2)
+```
+
+###Garage variables
+```{r, warning=FALSE, message=FALSE, out.width="100%"}
+g1 <- ggplot(data=df.combined[df.combined$GarageCars !=0,], aes(x=GarageYrBlt)) +
+        geom_histogram()
+g2 <- ggplot(data=df.combined, aes(x=as.factor(GarageCars))) +
+        geom_histogram(stat='count')
+g3 <- ggplot(data= df.combined, aes(x=GarageArea)) +
+        geom_density()
+g4 <- ggplot(data=df.combined, aes(x=as.factor(GarageCond))) +
+        geom_histogram(stat='count')
+g5 <- ggplot(data=df.combined, aes(x=GarageType)) +
+        geom_histogram(stat='count')
+g6 <- ggplot(data=df.combined, aes(x=as.factor(GarageQual))) +
+        geom_histogram(stat='count')
+g7 <- ggplot(data=df.combined, aes(x=as.factor(GarageFinish))) +
+        geom_histogram(stat='count')
+
+layout <- matrix(c(1,5,5,2,3,8,6,4,7),3,3,byrow=TRUE)
+multiplot(g1, g2, g3, g4, g5, g6, g7, layout=layout)
+
+```
+
+###Basement variables
+```{r, warning=FALSE, message=FALSE, out.width="100%"}
+b1 <- ggplot(data=df.combined, aes(x=BsmtFinSF1)) +
+        geom_histogram() + labs(x='Type 1 finished square feet')
+b2 <- ggplot(data=df.combined, aes(x=BsmtFinSF2)) +
+        geom_histogram()+ labs(x='Type 2 finished square feet')
+b3 <- ggplot(data=df.combined, aes(x=BsmtUnfSF)) +
+        geom_histogram()+ labs(x='Unfinished square feet')
+b4 <- ggplot(data=df.combined, aes(x=as.factor(BsmtFinType1))) +
+        geom_histogram(stat='count')+ labs(x='Rating of Type 1 finished area')
+b5 <- ggplot(data=df.combined, aes(x=as.factor(BsmtFinType2))) +
+        geom_histogram(stat='count')+ labs(x='Rating of Type 2 finished area')
+b6 <- ggplot(data=df.combined, aes(x=as.factor(BsmtQual))) +
+        geom_histogram(stat='count')+ labs(x='Height of the basement')
+b7 <- ggplot(data=df.combined, aes(x=as.factor(BsmtCond))) +
+        geom_histogram(stat='count')+ labs(x='Rating of general condition')
+b8 <- ggplot(data=df.combined, aes(x=as.factor(BsmtExposure))) +
+        geom_histogram(stat='count')+ labs(x='Walkout or garden level walls')
+
+layout <- matrix(c(1,2,3,4,5,9,6,7,8),3,3,byrow=TRUE)
+multiplot(b1, b2, b3, b4, b5, b6, b7, b8, layout=layout)
+
+```
 
