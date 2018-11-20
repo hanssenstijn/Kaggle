@@ -1031,3 +1031,89 @@ tb2 <- ggplot(data=df.combined, aes(x=as.factor(TotBathrooms))) +
 grid.arrange(tb1, tb2)
 ```
 
+##Adding 'House Age', 'Remodeled (Yes/No)', and IsNew variable
+
+Altogether, there are 3 variables that are relevant with regards to the Age of a house; YearBlt, YearRemodAdd, and YearSold. YearRemodAdd defaults to YearBuilt if there has been no Remodeling/Addition. I will use YearRemodeled and YearSold to determine the Age. However, as parts of old constructions will always remain and only parts of the house might have been renovated, I will also introduce a Remodeled Yes/No variable. This should be seen as some sort of penalty parameter that indicates that if the Age is based on a remodeling date, it is probably worth less than houses that were built from scratch in that same year.
+
+```{r}
+df.combined$Remod <- ifelse(df.combined$YearBuilt==df.combined$YearRemodAdd, 0, 1) #0=No Remodeling, 1=Remodeling
+df.combined$Age <- as.numeric(df.combined$YrSold)-df.combined$YearRemodAdd
+```
+
+As expected there is a negative correlation toward older houses on regard with their saleprices.
+```{r}
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),], aes(x=Age, y=SalePrice))+
+        geom_point(col='blue') + geom_smooth(method = "lm", se=FALSE, color="black", aes(group=1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma)
+```
+
+Remoddeld houses are less worth.
+```{r, out.width="50%"}
+ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=as.factor(Remod), y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "median", fill='blue') +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=6) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        theme_grey(base_size = 18) +
+        geom_hline(yintercept=163000, linetype="dashed") #dashed line is median SalePrice
+```
+
+Finally, I am creating the IsNew variable below. Altogether, there are 116 new houses in the dataset.
+
+```{r}
+df.combined$IsNew <- ifelse(df.combined$YrSold==df.combined$YearBuilt, 1, 0)
+table(df.combined$IsNew)
+```
+
+These 116 new houses are fairly evenly distributed among train and test set, and as you can see new houses are worth considerably more on average.
+
+```{r, out.width="50%"}
+ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=as.factor(IsNew), y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "median", fill='blue') +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=6) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        theme_grey(base_size = 18) +
+        geom_hline(yintercept=163000, linetype="dashed") #dashed line is median SalePrice
+```
+
+```{r}
+df.combined$YrSold <- as.factor(df.combined$YrSold) #the numeric version is now not needed anymore
+```
+
+##Binning Neighborhood
+
+Both the median and mean Saleprices agree on 3 neighborhoods with substantially higher saleprices. The separation of the 3 relatively poor neighborhoods is less clear, but at least both graphs agree on the same 3 poor neighborhoods. Since I do not want to 'overbin', I am only creating categories for those 'extremes'.
+```{r}
+nb1 <- ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=reorder(Neighborhood, SalePrice, FUN=median), y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "median", fill='blue') + labs(x='Neighborhood', y='Median SalePrice') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3) +
+        geom_hline(yintercept=163000, linetype="dashed", color = "red") #dashed line is median SalePrice
+nb2 <- ggplot(df.combined[!is.na(df.combined$SalePrice),], aes(x=reorder(Neighborhood, SalePrice, FUN=mean), y=SalePrice)) +
+        geom_bar(stat='summary', fun.y = "mean", fill='blue') + labs(x='Neighborhood', y="Mean SalePrice") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=50000), labels = comma) +
+        geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3) +
+        geom_hline(yintercept=163000, linetype="dashed", color = "red") #dashed line is median SalePrice
+grid.arrange(nb1, nb2)
+```
+
+```{r}
+df.combined$NeighRich[df.combined$Neighborhood %in% c('StoneBr', 'NridgHt', 'NoRidge')] <- 2
+df.combined$NeighRich[!df.combined$Neighborhood %in% c('MeadowV', 'IDOTRR', 'BrDale', 'StoneBr', 'NridgHt', 'NoRidge')] <- 1
+df.combined$NeighRich[df.combined$Neighborhood %in% c('MeadowV', 'IDOTRR', 'BrDale')] <- 0
+```
+
+##Total Square Feet
+
+As the total living space generally is very important when people buy houses, I am adding a predictors that adds up the living space above and below ground. The increase in sqaure feet seems the have a very postive correlation with saleprice.
+
+```{r}
+df.combined$TotalSqFeet <- df.combined$GrLivArea + df.combined$TotalBsmtSF
+ggplot(data=df.combined[!is.na(df.combined$SalePrice),], aes(x=TotalSqFeet, y=SalePrice))+
+        geom_point(col='blue') + geom_smooth(method = "lm", se=FALSE, color="black", aes(group=1)) +
+        scale_y_continuous(breaks= seq(0, 800000, by=100000), labels = comma) +
+        geom_text_repel(aes(label = ifelse(df.combined$GrLivArea[!is.na(df.combined$SalePrice)]>4500, rownames(df.combined), '')))
+```
+
+
