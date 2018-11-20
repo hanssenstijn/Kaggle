@@ -1116,4 +1116,19 @@ ggplot(data=df.combined[!is.na(df.combined$SalePrice),], aes(x=TotalSqFeet, y=Sa
         geom_text_repel(aes(label = ifelse(df.combined$GrLivArea[!is.na(df.combined$SalePrice)]>4500, rownames(df.combined), '')))
 ```
 
+## Perparing data for modeling
+
+### Dropping highly ccorrelated variables
+First of all, I am dropping a variable if two variables are highly correlated. These were chosen based on the produced correlation plots.
+```{r}
+dropVars <- c('YearRemodAdd', 'GarageYrBlt', 'GarageArea', 'GarageCond', 'TotalBsmtSF', 'TotalRmsAbvGrd', 'BsmtFinSF1')
+df.combined = df.combined[,!(names(df.combined) %in% dropVars)]
+```
+
+### Removing outliers
+Removing the two houses that have very high area but a low saleprice, for the reason that these might mess up the prediction model
+```{r}
+df.combined = df.combined[-c(524,1299),]
+```
+
 
