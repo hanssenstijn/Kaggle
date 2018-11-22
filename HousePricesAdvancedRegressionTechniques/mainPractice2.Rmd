@@ -1177,3 +1177,29 @@ DFdummies <- as.data.frame(model.matrix(~.-1, DFfactors))
 dim(DFdummies)
 ```
 
+###Removing levels with few or no observations in train or test
+
+```{r}
+#check if some values are absent in the test set
+ZerocolTest <- which(colSums(DFdummies[(nrow(all[!is.na(all$SalePrice),])+1):nrow(all),])==0)
+colnames(DFdummies[ZerocolTest])
+DFdummies <- DFdummies[,-ZerocolTest] #removing predictors
+```
+
+```{r}
+#check if some values are absent in the train set
+ZerocolTrain <- which(colSums(DFdummies[1:nrow(all[!is.na(all$SalePrice),]),])==0)
+colnames(DFdummies[ZerocolTrain])
+DFdummies <- DFdummies[,-ZerocolTrain] #removing predictor
+```
+
+Also taking out variables with less than 10 'ones' in the train set.
+
+```{r}
+fewOnes <- which(colSums(DFdummies[1:nrow(all[!is.na(all$SalePrice),]),])<10)
+colnames(DFdummies[fewOnes])
+DFdummies <- DFdummies[,-fewOnes] #removing predictors
+dim(DFdummies)
+```
+
+
