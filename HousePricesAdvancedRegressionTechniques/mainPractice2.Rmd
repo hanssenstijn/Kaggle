@@ -64,6 +64,7 @@ First a new dataset will be created containing only the nummeric variables. Corr
 # store the numeric variables
 idx = which(sapply(df.combined, is.numeric))
 numVar = names(idx)
+cat('There are', length(numVar), 'numeric variables')
 df.num = df.combined[,numVar]
 # calculate the correlation
 corNum = cor(df.num,use="pairwise.complete.obs")
@@ -870,6 +871,7 @@ df.combined$GarageYrBlt[2593] <- 2007
 ```{r}
 numericVar = which(sapply(df.combined,is.numeric))
 catVar = which(sapply(df.combined,is.factor))
+cat('There are', length(numericVar), 'numeric variables, and', length(catVar), 'categoric variables')
 ```
 
 ### Check correlation agin
@@ -1131,4 +1133,47 @@ Removing the two houses that have very high area but a low saleprice, for the re
 df.combined = df.combined[-c(524,1299),]
 ```
 
+##PreProcessing predictor variables
+
+Before modeling I need to center and scale the 'true numeric' predictors (so not variables that have been label encoded), and create dummy variables for the categorical predictors. I split the dataframe into one with all (true) numeric variables, and another dataframe holding the (ordinal) factors.
+
+```{r}
+numericVarNames <- numVar[!(numVar %in% c('MSSubClass', 'MoSold', 'YrSold', 'SalePrice', 'OverallQual', 'OverallCond'))] #numericVarNames was created before having done anything
+numericVarNames <- append(numericVarNames, c('Age', 'TotalPorchSF', 'TotBathrooms', 'TotalSqFeet'))
+
+DFnumeric <- df.combined[, names(df.combined) %in% numericVarNames]
+
+DFfactors <- df.combined[, !(names(df.combined) %in% numericVarNames)]
+DFfactors <- DFfactors[, names(DFfactors) != 'SalePrice']
+
+cat('There are', length(DFnumeric), 'numeric variables, and', length(DFfactors), 'factor variables')
+```
+
+### Skewness and normalizing
+Skewness is a measure of the symmetry in a distribution. In order to fix the skewness, I am taking the log for all numeric predictors with an absolute skew greater than 0.8 (actually: log+1, to avoid division by zero issues).
+```{r}
+for(i in 1:ncol(DFnumeric)){
+        if (abs(skew(DFnumeric[,i]))>0.8){
+                DFnumeric[,i] <- log(DFnumeric[,i] +1)
+        }
+}
+```
+
+```{r}
+PreNum <- preProcess(DFnumeric, method=c("center", "scale"))
+print(PreNum)
+```
+```{r}
+DFnorm <- predict(PreNum, DFnumeric)
+dim(DFnorm)
+```
+
+###One hot encoding the categorical variables
+
+'one-hot encode' the categorical variables. This basically means that all factor values are seperated into colums with 1s and 0s.
+
+```{r}
+DFdummies <- as.data.frame(model.matrix(~.-1, DFfactors))
+dim(DFdummies)
+```
 
