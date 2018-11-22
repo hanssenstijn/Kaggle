@@ -1181,14 +1181,14 @@ dim(DFdummies)
 
 ```{r}
 #check if some values are absent in the test set
-ZerocolTest <- which(colSums(DFdummies[(nrow(all[!is.na(all$SalePrice),])+1):nrow(all),])==0)
+ZerocolTest <- which(colSums(DFdummies[(nrow(df.combined[!is.na(df.combined$SalePrice),])+1):nrow(df.combined),])==0)
 colnames(DFdummies[ZerocolTest])
 DFdummies <- DFdummies[,-ZerocolTest] #removing predictors
 ```
 
 ```{r}
 #check if some values are absent in the train set
-ZerocolTrain <- which(colSums(DFdummies[1:nrow(all[!is.na(all$SalePrice),]),])==0)
+ZerocolTrain <- which(colSums(DFdummies[1:nrow(df.combined[!is.na(df.combined$SalePrice),]),])==0)
 colnames(DFdummies[ZerocolTrain])
 DFdummies <- DFdummies[,-ZerocolTrain] #removing predictor
 ```
@@ -1196,10 +1196,44 @@ DFdummies <- DFdummies[,-ZerocolTrain] #removing predictor
 Also taking out variables with less than 10 'ones' in the train set.
 
 ```{r}
-fewOnes <- which(colSums(DFdummies[1:nrow(all[!is.na(all$SalePrice),]),])<10)
+fewOnes <- which(colSums(DFdummies[1:nrow(df.combined[!is.na(df.combined$SalePrice),]),])<10)
 colnames(DFdummies[fewOnes])
 DFdummies <- DFdummies[,-fewOnes] #removing predictors
 dim(DFdummies)
+```
+
+```{r}
+combined <- cbind(DFnorm, DFdummies) #combining all (now numeric) predictors into one dataframe 
+```
+
+##Dealing with skewness of response variable
+
+```{r}
+skew(df.combined$SalePrice)
+```
+
+```{r}
+qqnorm(df.combined$SalePrice)
+qqline(df.combined$SalePrice)
+```
+log fold and "+1" is not necessary as there are no 0's
+```{r}
+df.combined$SalePrice <- log(df.combined$SalePrice)
+skew(df.combined$SalePrice)
+```
+
+As you can see,the skew is now quite low and the Q-Q plot is also looking much better.
+
+```{r}
+qqnorm(df.combined$SalePrice)
+qqline(df.combined$SalePrice)
+```
+
+##Composing train and test sets
+
+```{r}
+train1 <- combined[!is.na(df.combined$SalePrice),]
+test1 <- combined[is.na(df.combined$SalePrice),]
 ```
 
 
