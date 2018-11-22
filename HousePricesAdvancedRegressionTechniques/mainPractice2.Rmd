@@ -16,7 +16,7 @@ rm(list=ls())
 Loading the required packages for specific functions. If the packaged aren't present, they will be automatically be downloaded.
 ```{r}
 if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
-pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","plyr","Metrics","knitr","ggplot2","plyr","dplyr","corrplot","caret","gridExtra","scales","Rmisc","ggrepel","randomForest","psych","xgboost")
+pacman::p_load("stringr","GLDEX","RSEIS","DescTools","caret","plyr","Metrics","knitr","ggplot2","plyr","dplyr","corrplot","caret","gridExtra","scales","Rmisc","ggrepel","randomForest","psych","xgboost","Ckmeans.1d.dp")
 ```
 
 ### Set working directory
@@ -1266,5 +1266,38 @@ Prediction of the lasso model
 LassoPred <- predict(lasso_mod, test1)
 predictions_lasso <- exp(LassoPred) #need to reverse the log to the real values
 head(predictions_lasso)
+```
+
+##XGBoost model
+Change the data into the xgb.matrix structure.
+```{r}
+label_train <- df.combined$SalePrice[!is.na(df.combined$SalePrice)]
+
+# put our testing & training data into two seperates Dmatrixs objects
+dtrain <- xgb.DMatrix(data = as.matrix(train1), label= label_train)
+dtest <- xgb.DMatrix(data = as.matrix(test1))
+```
+Parameter settings.
+```{r}
+default_param<-list(
+        objective = "reg:linear",
+        booster = "gbtree",
+        eta=0.05, #default = 0.3
+        gamma=0,
+        max_depth=3, #default=6
+        min_child_weight=4, #default=1
+        subsample=1,
+        colsample_bytree=1
+)
+```
+
+```{r}
+xgb_mod <- xgb.train(data = dtrain, params=default_param, nrounds = 454)
+```
+
+```{r}
+XGBpred <- predict(xgb_mod, dtest)
+predictions_XGB <- exp(XGBpred)
+head(predictions_XGB)
 ```
 
