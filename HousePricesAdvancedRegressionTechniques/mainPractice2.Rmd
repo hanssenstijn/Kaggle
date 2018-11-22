@@ -1261,6 +1261,10 @@ varsNotSelected <- length(which(lassoImportance$Overall==0))
 
 cat('Lasso uses', varsSelected, 'variables in its model, and did not select', varsNotSelected, 'variables.')
 ```
-
-
+Prediction of the lasso model
+```{r}
+LassoPred <- predict(lasso_mod, test1)
+predictions_lasso <- exp(LassoPred) #need to reverse the log to the real values
+head(predictions_lasso)
+```
 
