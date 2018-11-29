@@ -3,6 +3,14 @@ title: "Bag of Words meets Bag of Popcorn"
 output: github_document
 ---
 
+### Clear working space
+First step is to make sure that the working space is empty.
+```{r}
+# clear all variables
+rm(list=ls()) 
+```
+
+### Load libraries
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = F,message = F)
 
@@ -13,14 +21,24 @@ library(RWeka)
 library(randomForest)
 ```
 
+### Set working directory
+Choose the path were the data-sets are stored
+```{r}
+DATA.DIR <- "~/GitHub/Kaggle/BagofWordsMeetsBagsofPopcorn"
+setwd(DATA.DIR)
+# See which files are in WD
+list.files() 
+```
+
 # Project Briefing
 - We use the *Bag of Words meets Bag of Popcorn* dataset from kaggle to do a sentiment analysis of movies based on user reviews. We deal with *unstructered data* in the form of written text making use of *Natural Language Processing* libraries such as *tm* and *Rweka*. Then we apply Machine Learning algorithms such as *Logistic Regression* & *Random Forest* to predict viewer sentiment on test dat.
 
 Training Dataset- We use the "Bag of Words meets Bag of Popcorrn" dataset from kaggle to train the algorithm.
 - Data Import
 ```{r}
-word_train = read.table("../input/bag-of-word-meets-bag-of-popcorn/labeledTrain.tsv", header = T)
-word_test = read.table("../input/bag-of-word-meets-bag-of-popcorn/test.tsv", header = T)
+
+word_train = read.table("labeledTrainData.tsv", header = T)
+word_test = read.table("testData.tsv", header = T)
 
 
 full = bind_rows(word_train,word_test)
