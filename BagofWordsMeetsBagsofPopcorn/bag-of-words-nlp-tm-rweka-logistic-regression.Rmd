@@ -58,12 +58,16 @@ text = VCorpus(VectorSource(full$review))        # Creating a Corpus of reviews
 
 text = tm_map(text,content_transformer(tolower))  # Converting to lower case
 
+as.character(text[[1]])
+
 text = tm_map(text,removeNumbers)                # Removing numbers
 
 as.character(text[[1]])
 # We can see that all text is now in lower case and numbers have been removed.
 
-text = tm_map(text,removePunctuation)            # Removing Punctuations
+text = tm_map(text,removePunctuation)  # Removing Punctuations
+
+as.character(text[[1]])
 ```
 
 # Cleaning the text - Step 2
@@ -71,11 +75,15 @@ text = tm_map(text,removePunctuation)            # Removing Punctuations
 ```{r}
 text = tm_map(text,removeWords,stopwords())      #to remove common words
 
+as.character(text[[1]])
 
 text = tm_map(text,stemDocument)                 #to convert words back to root words.
 
+as.character(text[[1]])
+
 text = tm_map(text,stripWhitespace)              #to remove white spaces
 
+as.character(text[[1]])
 ```
 
 - stopwords() contains a list of irrelevant words in English which usually doesnot help the algorithm learn about the reviews.
