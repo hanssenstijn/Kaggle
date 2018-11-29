@@ -109,6 +109,7 @@ and 3 word phrases respectively using *Rweka* package.
 - Creating the DTMs for 1-grams, 2-grams & 3-grams
 ```{r}
 dtm1 = DocumentTermMatrix(text)
+
 dtm1 = removeSparseTerms(dtm1,0.95)
 
 ## this is dtm for 1 words. we will find the more important words and just use those
@@ -187,6 +188,9 @@ dataset_train$y_pred = as.factor(dataset_train$y_pred)
 m1 = glm(formula = y_pred ~.,
          data = dataset_train,
          family = 'binomial')
-pred = predict(m1,newdata = dataset_test)
+pred = predict(m1,newdata = dataset_test,type = "response")
+probs <- exp(pred)/(1+exp(pred)) 
+#gives you probability that y=1 for each observation
+
 
 ```
