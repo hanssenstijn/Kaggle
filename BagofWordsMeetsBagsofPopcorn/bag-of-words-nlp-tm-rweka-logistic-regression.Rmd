@@ -111,38 +111,44 @@ and 3 word phrases respectively using *Rweka* package.
 
 - Creating the DTMs for 1-grams, 2-grams & 3-grams
 ```{r}
-dtm1 = DocumentTermMatrix(text)
-
-dtm1 = removeSparseTerms(dtm1,0.95)
-
 ## this is dtm for 1 words. we will find the more important words and just use those
-
-dtm2 = DocumentTermMatrix(text, control = list(tokenize = BigramTokenizer))
-dtm2 = removeSparseTerms(dtm2,0.99)
+dtm1 = DocumentTermMatrix(text)
+dtm1 = removeSparseTerms(dtm1,0.95)
+dtm1
 
 ## similarly, dtm of 2 words
-
-dtm3 = DocumentTermMatrix(text, control = list(tokenize = TrigramTokenizer))
-dtm3 = removeSparseTerms(dtm3,0.999)
+dtm2 = DocumentTermMatrix(text, control = list(tokenize = BigramTokenizer))
+dtm2 = removeSparseTerms(dtm2,0.99)
+dtm2
 
 ##dtm for 3 words
-
+dtm3 = DocumentTermMatrix(text, control = list(tokenize = TrigramTokenizer))
+dtm3 = removeSparseTerms(dtm3,0.999)
+dtm3
 ```
 
 # Seeing the final DTMs
 - We will also see the most frequently occuring 1 word , 2-word & 3-word phrases.
 ```{r}
 dataset1 = as.data.frame(as.matrix(dtm1))
+head(dataset1)
 dataset2 = as.data.frame(as.matrix(dtm2))
+head(dataset2)
 dataset3 = as.data.frame(as.matrix(dtm3))
+head(dataset3)
 
 #for dtm1
 dataset_counts1 = as.data.frame(colSums(dataset1))
+head(dataset_counts1)
 dataset_counts1$word = rownames(dataset_counts1)
+head(dataset_counts1)
 
 colnames(dataset_counts1) = c("count","word")
+head(dataset_counts1)
 dataset_counts1 = dataset_counts1[c(2,1)] 
+head(dataset_counts1)
 dataset_counts1 = dataset_counts1 %>% arrange(-count)
+head(dataset_counts1)
 
 #for dtm2
 dataset_counts2 = as.data.frame(colSums(dataset2))
