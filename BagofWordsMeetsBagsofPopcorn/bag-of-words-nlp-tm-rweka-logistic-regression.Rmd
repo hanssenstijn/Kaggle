@@ -5,6 +5,7 @@ output: github_document
 
 ### Clear working space
 First step is to make sure that the working space is empty.
+
 ```{r}
 # clear all variables
 rm(list=ls()) 
@@ -52,6 +53,8 @@ str(full)
 - sentiment column provides the label for the training algorithm
 - We start cleaning the text
 ```{r}
+as.character(full$review[[1]])
+
 full$review = gsub(full$review, pattern = '<br />', replacement = ' ')
 
 text = VCorpus(VectorSource(full$review))        # Creating a Corpus of reviews
@@ -191,6 +194,5 @@ m1 = glm(formula = y_pred ~.,
 pred = predict(m1,newdata = dataset_test,type = "response")
 probs <- exp(pred)/(1+exp(pred)) 
 #gives you probability that y=1 for each observation
-
 
 ```
