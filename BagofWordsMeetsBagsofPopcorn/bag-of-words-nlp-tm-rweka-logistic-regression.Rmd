@@ -40,7 +40,7 @@ Training Dataset- We use the "Bag of Words meets Bag of Popcorrn" dataset from k
 
 word_train = read.table("labeledTrainData.tsv", header = T)
 word_test = read.table("testData.tsv", header = T)
-
+examplesubmission = read.csv("sampleSubmission.csv")
 
 full = bind_rows(word_train,word_test)
 dim(word_train)
@@ -166,7 +166,6 @@ colnames(dataset_counts3) = c("count","word")
 dataset_counts3 = dataset_counts3[c(2,1)] 
 dataset_counts3= dataset_counts3 %>% arrange(-count)
 
-head(dataset_counts1,20)
 head(dataset_counts2,20)
 head(dataset_counts3,20)
 ```
@@ -191,7 +190,6 @@ dataset_test = final_dataset[25001:50000,]
 # Model fitting - Logistic Regression
 
 ```{r}
-
 dataset_train$y_pred = word_train$sentiment
 dataset_train$y_pred = as.factor(dataset_train$y_pred)
 m1 = glm(formula = y_pred ~.,
@@ -200,5 +198,38 @@ m1 = glm(formula = y_pred ~.,
 pred = predict(m1,newdata = dataset_test,type = "response")
 probs <- exp(pred)/(1+exp(pred)) 
 #gives you probability that y=1 for each observation
+head(probs)
+typeof(probs)
+probs = as.data.frame(probs)
+typeof(probs)
+head(probs)
+```
+
+```{r}
+for(i in 1:nrow(probs)){
+        if (probs[i,] >0.6) {
+                probs[i,]  <- 1
+        }
+    else probs[i,]  <- 0
+}
+head(probs,n=10)
+summary(probs)
 
 ```
+
+```{r}
+probs$id = word_test$id
+head(probs)
+colnames(probs) = c("sentiment","id")
+probs = probs[c(2,1)] 
+head(probs)
+probs$sentiment = as.integer(probs$sentiment)
+rownames(probs) <- c()
+head(probs)
+```
+
+### Kaggle submition document
+```{r}
+write.csv(probs, file="kaggle_submission.csv", row.names = F)
+```
+
