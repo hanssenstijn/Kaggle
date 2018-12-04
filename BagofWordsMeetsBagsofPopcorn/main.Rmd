@@ -46,4 +46,11 @@ In the text are the line breaks shown as *<br />*. This have to be taken care of
 as.character(full$review[[1]])
 ```
 
+### Pre-data cleaning
+gsub() function replaces all matches of a string, if the parameter is a string vector, returns a string vector of the same length and with the same attributes.
+```{r}
+full$review = gsub('<br />',' ',full$review)
+as.character(full$review[[1]])
+```
+
 
