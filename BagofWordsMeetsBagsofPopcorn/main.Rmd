@@ -39,3 +39,11 @@ dim(word_train)
 dim(word_test)
 str(full)
 ```
+
+### Inspect a review
+In the text are the line breaks shown as *<br />*. This have to be taken care off. Furthermore, we are not interested in the numberws and punctuations. In addition, we will remove the common stop words, convert the words back to their roots. Lastly, we will remove all the whitespaces.
+```{r}
+as.character(full$review[[1]])
+```
+
+
