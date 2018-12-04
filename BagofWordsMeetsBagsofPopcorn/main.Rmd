@@ -76,4 +76,11 @@ text = tm_map(text,stripWhitespace)
 as.character(full$review[[1]])
 ```
 
+# N grams Tokenizer
+The bigramTokenizer will be used for word combination of two words. while the trygramTokenizer will be used for the combination of three words.
+```{r}
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+
+TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+```
 
