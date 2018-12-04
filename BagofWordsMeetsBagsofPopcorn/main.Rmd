@@ -1,0 +1,35 @@
+---
+title: BagofWordsMeetsBagsofPopcorn
+author: Stijn Hanssen
+date: 4 December 2018
+output: html_document
+---
+
+### Clear working space
+First step is to make sure that the working space is empty.
+```{r}
+# clear all variables
+rm(list=ls()) 
+```
+
+### Load packages
+Loading the required packages for specific functions.
+```{r}
+if (!require("pacman")) suppressPackageStartupMessages(install.packages("pacman"))
+pacman::p_load(dplyr,tm,knitr,RWeka,randomForest)
+```
+
+### Set working directory
+Choose the path were the data-sets are stored
+```{r}
+DATA.DIR <- "~/GitHub/Kaggle/BagofWordsMeetsBagsofPopcorn"
+setwd(DATA.DIR)
+# See which files are in WD
+list.files() 
+```
+
+### Import data
+The training and test set will be imported into R.
+```{r}
+
+```
