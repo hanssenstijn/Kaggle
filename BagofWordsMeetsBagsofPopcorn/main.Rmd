@@ -59,3 +59,21 @@ Tm package text mining in R. Main structure managing documents are Corpus.
 text = VCorpus(VectorSource(full$review))
 ```
 
+### Data cleaning the corpus
+Transforming all letter to lowercases, remove the numbers, get rid of the punctuations, delete stopwords, use the stem function to get the root words and lastly delete the whitespaces
+```{r}
+text = tm_map(text, content_transformer(tolower))
+as.character(full$review[[1]])
+text = tm_map(text,removeNumbers)
+as.character(full$review[[1]])
+text = tm_map(text,removePunctuation)
+as.character(full$review[[1]])
+text = tm_map(text,stopwords())
+as.character(full$review[[1]])
+text = tm_map(text,stemDocument)
+as.character(full$review[[1]])
+text = tm_map(text,stripWhitespace)
+as.character(full$review[[1]])
+```
+
+
