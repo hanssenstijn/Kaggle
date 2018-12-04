@@ -106,4 +106,32 @@ dataset3 = as.data.frame(as.matrix(dtm3))
 head(dataset3)
 ```
 
+### Determine the most often occuring words
+```{r}
+dataset_counts1 = as.data.frame(colSums(dataset1))
+head(dataset_counts1)
+dataset_counts1$word = rownames(dataset_counts1)
+head(dataset_counts1)
+colnames(dataset_counts1) = c("count","word")
+head(dataset_counts1)
+dataset_counts1 = dataset_counts1[c(2,1)] 
+head(dataset_counts1)
+dataset_counts1 = dataset_counts1 %>% arrange(-count)
+head(dataset_counts1)
+
+dataset_counts2 = as.data.frame(colSums(dataset2))
+dataset_counts2$word = rownames(dataset_counts2)
+colnames(dataset_counts2) = c("count","word")
+dataset_counts2 = dataset_counts2[c(2,1)] 
+dataset_counts2 = dataset_counts2 %>% arrange(-count)
+
+dataset_counts3 = as.data.frame(colSums(dataset3))
+dataset_counts3$word = rownames(dataset_counts3)
+colnames(dataset_counts3) = c("count","word")
+dataset_counts3 = dataset_counts3[c(2,1)] 
+dataset_counts3= dataset_counts3 %>% arrange(-count)
+
+head(dataset_counts2,20)
+head(dataset_counts3,20)
+```
 
