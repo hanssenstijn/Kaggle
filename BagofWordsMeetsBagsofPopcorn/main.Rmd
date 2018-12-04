@@ -135,3 +135,10 @@ head(dataset_counts2,20)
 head(dataset_counts3,20)
 ```
 
+### Combine datasets and split em into training and test set
+
+```{r}
+final_dataset = as.data.frame(cbind(dataset1,dataset2,dataset3))
+dataset_train = final_dataset[1:25000,]
+dataset_test = final_dataset[25001:50000,]
+```
