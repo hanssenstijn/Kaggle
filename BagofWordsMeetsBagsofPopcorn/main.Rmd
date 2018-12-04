@@ -68,7 +68,7 @@ text = tm_map(text,removeNumbers)
 as.character(full$review[[1]])
 text = tm_map(text,removePunctuation)
 as.character(full$review[[1]])
-text = tm_map(text,stopwords())
+text = tm_map(text,removeWords,stopwords())
 as.character(full$review[[1]])
 text = tm_map(text,stemDocument)
 as.character(full$review[[1]])
@@ -83,4 +83,19 @@ BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
 
 TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
 ```
+
+### Apply tokenization
+
+```{r}
+dtm1 <- tm::DocumentTermMatrix(text)
+dtm1 <- removeSparseTerms(dtm1,0.95)
+
+dtm2 <- tm::DocumentTermMatrix(text, control=list(tokenize=BigramTokenizer))
+dtm2 <- removeSparseTerms(dtm2,0.99)
+
+dtm3 <- tm::DocumentTermMatrix(text, control=list(tokenize=TrigramTokenizer))
+dtm3 <- removeSparseTerms(dtm3,0.999)
+```
+
+
 
