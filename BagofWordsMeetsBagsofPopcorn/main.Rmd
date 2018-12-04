@@ -53,4 +53,9 @@ full$review = gsub('<br />',' ',full$review)
 as.character(full$review[[1]])
 ```
 
+### Converting into a corpus
+Tm package text mining in R. Main structure managing documents are Corpus. 
+```{r}
+text = VCorpus(VectorSource(full$review))
+```
 
