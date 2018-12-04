@@ -31,5 +31,11 @@ list.files()
 ### Import data
 The training and test set will be imported into R.
 ```{r}
+word_train = read.table("labeledTrainData.tsv", header = T)
+word_test = read.table("testData.tsv", header = T)
+full = bind_rows(word_train,word_test)
 
+dim(word_train)
+dim(word_test)
+str(full)
 ```
