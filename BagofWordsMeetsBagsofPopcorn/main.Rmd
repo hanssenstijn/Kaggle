@@ -85,7 +85,6 @@ TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3)
 ```
 
 ### Apply tokenization
-
 ```{r}
 dtm1 <- tm::DocumentTermMatrix(text)
 dtm1 <- removeSparseTerms(dtm1,0.95)
@@ -97,5 +96,14 @@ dtm3 <- tm::DocumentTermMatrix(text, control=list(tokenize=TrigramTokenizer))
 dtm3 <- removeSparseTerms(dtm3,0.999)
 ```
 
+### Transform into DF
+```{r}
+dataset1 = as.data.frame(as.matrix(dtm1))
+head(dataset1)
+dataset2 = as.data.frame(as.matrix(dtm2))
+head(dataset2)
+dataset3 = as.data.frame(as.matrix(dtm3))
+head(dataset3)
+```
 
 
