@@ -142,3 +142,47 @@ final_dataset = as.data.frame(cbind(dataset1,dataset2,dataset3))
 dataset_train = final_dataset[1:25000,]
 dataset_test = final_dataset[25001:50000,]
 ```
+
+### Model fitting - Logistic Regression
+
+```{r}
+dataset_train$y_pred = word_train$sentiment
+dataset_train$y_pred = as.factor(dataset_train$y_pred)
+m1 = glm(formula = y_pred ~.,
+         data = dataset_train,
+         family = 'binomial')
+pred = predict(m1,newdata = dataset_test,type = "response")
+
+#gives you probability that y=1 for each observation
+probs <- exp(pred)/(1+exp(pred)) 
+probs = as.data.frame(probs)
+```
+
+### Assigning a 1 to values which have been predicted to have a 60 percent chance or higher than.
+
+```{r}
+for(i in 1:nrow(probs)){
+        if (probs[i,] >0.6) {
+                probs[i,]  <- 1
+        }
+    else probs[i,]  <- 0
+}
+```
+
+### Clean the dataframe for submition 
+
+```{r}
+probs$id = word_test$id
+head(probs)
+colnames(probs) = c("sentiment","id")
+probs = probs[c(2,1)] 
+head(probs)
+probs$sentiment = as.integer(probs$sentiment)
+rownames(probs) <- c()
+head(probs)
+```
+
+### Kaggle submition document
+```{r}
+write.csv(probs, file="kaggle_submission.csv", row.names = F)
+```
